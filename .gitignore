@@ -26,3 +26,9 @@ pnpm-debug.log*
 
 supabase/.temp
 *.tsbuildinfo
+
+# supabase/functions/_shared/data/ SÍ se versiona (no se ignora): es una copia generada por
+# `npm run sync:config` de config/*.json que las Edge Functions necesitan empaquetada dentro
+# de supabase/functions/ (el runtime, local y en la nube, no lee fuera de esa carpeta). Si
+# editas config/casos.json, config/checklist.json o config/personajes/*.json, vuelve a
+# ejecutar `npm run sync:config` antes de desplegar o la copia quedará desactualizada.

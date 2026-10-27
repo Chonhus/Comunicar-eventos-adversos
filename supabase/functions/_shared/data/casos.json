@@ -1,0 +1,70 @@
+{
+  "maxIntentos": 2,
+  "duracionMaximaSeg": 360,
+  "avisoDuracionSeg": 300,
+  "requisitoDesbloqueo": {
+    "nivel": 2,
+    "requiereNivel": 1,
+    "puntuacionMinima": 0
+  },
+  "casos": [
+    {
+      "id": "n1_paracetamol",
+      "nivel": 1,
+      "titulo": "Dosis duplicada de paracetamol sin daño",
+      "dificultad": "sencillo",
+      "avatar": {
+        "nombre": "Antonio Ruiz",
+        "rol": "paciente",
+        "edad": 68,
+        "glb": "/avatars/antonio.glb",
+        "imagenRespaldo": "/avatars/antonio.jpg",
+        "fondo": "/fondos/habitacion.jpg",
+        "camara": {
+          "vista": "upper",
+          "cameraDistance": 0.25,
+          "cameraY": 0.12
+        },
+        "pose": "antonio",
+        "body": "M"
+      },
+      "mostrarItemsEnBriefing": true,
+      "briefingRef": "docs/CASOS.md#nivel-1",
+      "hechosReferenciaRef": "docs/CASOS.md#hechos-n1",
+      "voz": "PENDIENTE (voz neural es-ES masculina, mayor)",
+      "modeloPersonaje": "claude-haiku-5-5",
+      "emocionInicial": "neutral",
+      "fraseApertura": "Hola, buenas… ¿viene a verme a mí?",
+      "personajeRef": "docs/CASOS.md#personaje-1"
+    },
+    {
+      "id": "n2_caida_fractura",
+      "nivel": 2,
+      "titulo": "Caída con fractura de cadera; familiar enfadada",
+      "dificultad": "dificil",
+      "avatar": {
+        "nombre": "Lucía Martín",
+        "rol": "hija de la paciente",
+        "edad": 52,
+        "glb": "/avatars/lucia.glb",
+        "imagenRespaldo": "/avatars/lucia.jpg",
+        "fondo": "/fondos/sala-informacion.jpg",
+        "camara": {
+          "vista": "upper",
+          "cameraDistance": 0.25,
+          "cameraY": 0.12
+        },
+        "pose": "lucia",
+        "body": "F"
+      },
+      "mostrarItemsEnBriefing": false,
+      "briefingRef": "docs/CASOS.md#nivel-2",
+      "hechosReferenciaRef": "docs/CASOS.md#hechos-n2",
+      "voz": "PENDIENTE (voz neural es-ES femenina, ~50 años)",
+      "modeloPersonaje": "claude-haiku-5-5",
+      "emocionInicial": "enfadado",
+      "fraseApertura": "¿Me va a explicar alguien qué ha pasado con mi madre?",
+      "personajeRef": "docs/CASOS.md#personaje-2"
+    }
+  ]
+}
