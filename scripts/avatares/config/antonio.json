@@ -1,0 +1,117 @@
+{
+ "id": "antonio",
+ "out_dir": "OUT_DIR",
+ "macros": {
+  "gender": 1.0,
+  "age": 0.85,
+  "weight": 0.65,
+  "muscle": 0.4,
+  "caucasian": 0.8,
+  "african": 0.08,
+  "asian": 0.12,
+  "height": 0.45
+ },
+ "targets": {
+  "head/head-square": 0.5,
+  "chin/chin-width-incr": 0.4,
+  "chin/chin-prominent-incr": 0.3,
+  "nose/nose-volume-incr": 0.35,
+  "nose/nose-scale-vert-incr": 0.2,
+  "neck/neck-double-incr": 0.4,
+  "mouth/mouth-laugh-lines-out": 0.5,
+  "head/head-fat-incr": 0.3,
+  "eyes/l-eye-height2-incr": 0.6,
+  "eyes/l-eye-eyefold-up": 0.4,
+  "eyes/l-eye-scale-incr": 0.2,
+  "eyes/r-eye-height2-incr": 0.6,
+  "eyes/r-eye-eyefold-up": 0.4,
+  "eyes/r-eye-scale-incr": 0.2
+ },
+ "skin": "old_caucasian_male.mhmat",
+ "assets": [
+  [
+   "eyes",
+   "high-poly.mhclo",
+   "Eyes"
+  ],
+  [
+   "eyebrows",
+   "eyebrow001.mhclo",
+   "Eyebrows"
+  ],
+  [
+   "eyelashes",
+   "eyelashes02.mhclo",
+   "Eyelashes"
+  ],
+  [
+   "teeth",
+   "teeth_base.mhclo",
+   "Teeth"
+  ],
+  [
+   "tongue",
+   "tongue01.mhclo",
+   "Tongue"
+  ],
+  [
+   "hair",
+   "short01.mhclo",
+   "Hair"
+  ],
+  [
+   "clothes",
+   "male_casualsuit06.mhclo",
+   "Clothes",
+   {
+    "solo_pantalon": true,
+    "margen": 0.03
+   }
+  ],
+  [
+   "clothes",
+   "namuhekam_male_polo_shirt.mhclo",
+   "Clothes"
+  ]
+ ],
+ "tints": {
+  "Human.body": {
+   "rgb": [
+    0.92,
+    0.82,
+    0.76
+   ]
+  },
+  "high-poly": {
+   "rgb": [
+    0.55,
+    0.45,
+    0.4
+   ]
+  },
+  "short01": {
+   "sat": 0.0,
+   "gain": 2.2
+  },
+  "polo": {
+   "rgb": [
+    0.62,
+    0.78,
+    0.92
+   ]
+  },
+  "eyebrow001": {
+   "sat": 0.1,
+   "gain": 1.4
+  },
+  "male_casualsuit06": {
+   "sat": 0.15,
+   "rgb": [
+    0.62,
+    0.78,
+    0.92
+   ],
+   "gain": 1.6
+  }
+ }
+}

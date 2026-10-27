@@ -1,0 +1,30 @@
+{
+  "items": [
+    { "id": "presentacion", "etiqueta": "Se presenta", "tipo": "nucleo", "peso": 1.0, "activo": true,
+      "definicion": "Dice su nombre y su rol o servicio. Parcial si solo dice uno de los dos." },
+    { "id": "explica_evento", "etiqueta": "Explica qué ha pasado", "tipo": "nucleo", "peso": 1.0, "activo": true,
+      "definicion": "Describe los hechos conocidos del evento de forma clara, sin tecnicismos innecesarios y sin especular. Parcial si es vago o incompleto." },
+    { "id": "lamenta", "etiqueta": "Lamenta lo sucedido", "tipo": "nucleo", "peso": 1.0, "activo": true,
+      "definicion": "Expresa pesar o pide disculpas de forma sincera por lo ocurrido." },
+    { "id": "plan_atencion", "etiqueta": "Explica cómo se va a tratar", "tipo": "nucleo", "peso": 1.0, "activo": true,
+      "definicion": "Explica las consecuencias para el paciente y el plan clínico: pruebas, tratamiento, vigilancia o signos de alarma." },
+    { "id": "interlocutor", "etiqueta": "Ofrece un interlocutor", "tipo": "nucleo", "peso": 1.0, "activo": true,
+      "definicion": "Indica una persona o servicio concreto de referencia para dudas y seguimiento." },
+    { "id": "escucha_dudas", "etiqueta": "Escucha y resuelve dudas", "tipo": "recomendado", "peso": 0.75, "activo": true,
+      "definicion": "Invita a preguntar, valida explícitamente la emoción del interlocutor o responde a sus preguntas." },
+    { "id": "prevencion", "etiqueta": "Medidas para que no se repita", "tipo": "recomendado", "peso": 0.75, "activo": true,
+      "definicion": "Menciona que el evento se ha notificado o se va a analizar y que se tomarán medidas para evitar que se repita." }
+  ],
+  "alertas": [
+    { "id": "culpabiliza", "etiqueta": "Culpabiliza a personas", "penalizacion": 5,
+      "definicion": "Atribuye la culpa a un profesional concreto, a otro servicio o al propio paciente o familia." },
+    { "id": "especula", "etiqueta": "Especula o promete", "penalizacion": 5,
+      "definicion": "Da información no confirmada como hecho o promete resultados." },
+    { "id": "minimiza", "etiqueta": "Minimiza lo ocurrido", "penalizacion": 5,
+      "definicion": "Resta importancia a lo sucedido." },
+    { "id": "defensivo", "etiqueta": "Actitud defensiva", "penalizacion": 5,
+      "definicion": "Se justifica en exceso, discute con el interlocutor o desanima una reclamación." },
+    { "id": "tecnicismos", "etiqueta": "Lenguaje técnico", "penalizacion": 5,
+      "definicion": "Usa jerga médica sin explicarla de forma repetida." }
+  ]
+}

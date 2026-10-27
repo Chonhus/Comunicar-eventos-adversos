@@ -1,0 +1,55 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<style>html,body{margin:0;background:#cfd4d8}#a{width:720px;height:720px}</style></head>
+<body><div id="a"></div>
+<script type="module">
+import * as THREE from 'three';
+import { TalkingHead } from "./modules/talkinghead.mjs";
+const p = new URLSearchParams(location.search);
+try{
+ const head = new TalkingHead(document.getElementById('a'), { ttsEndpoint:"", lipsyncModules:[], cameraView:(p.get("v")||"mid"), avatarMood:"neutral", avatarIdleHeadMove:0, avatarIdleEyeContact:1 });
+ await head.showAvatar({ url: p.get('m'), body: p.get('b')||'M', avatarMood:'neutral' });
+ window.head=head;
+ const A = n => head.armature.getObjectByName(n);
+ const W = (o) => { const v=new THREE.Vector3(); o.getWorldPosition(v); return v; };
+ window.solve = (P) => {
+   head.stop();
+   const st = head.propsToThreeObjects(head.poseTemplates['straight'].props);
+   for (const [k,v] of Object.entries(st)) { const [b,t]=k.split('.'); const o=A(b); if(!o) continue; if(t==='quaternion') o.quaternion.copy(v); else if(t==='position') o.position.copy(v); }
+   head.armature.updateMatrixWorld(true);
+   const up=new THREE.Vector3(0,1,0);
+   const left=W(A('LeftArm')).sub(W(A('RightArm'))).setY(0).normalize();
+   const fwd=new THREE.Vector3().crossVectors(left,up).normalize();
+   const aim=(bone, child, target)=>{
+     const bp=W(bone), cur=W(child).sub(bp).normalize(), des=target.clone().sub(bp).normalize();
+     const q=new THREE.Quaternion().setFromUnitVectors(cur,des);
+     const wq=new THREE.Quaternion(); bone.getWorldQuaternion(wq);
+     const pq=new THREE.Quaternion(); bone.parent.getWorldQuaternion(pq);
+     bone.quaternion.copy(pq.invert().multiply(q.multiply(wq))); head.armature.updateMatrixWorld(true);
+   };
+   const twist=(bone, child, ang)=>{ const ax=W(child).sub(W(bone)).normalize(); const wq=new THREE.Quaternion(); bone.getWorldQuaternion(wq);
+     const nq=new THREE.Quaternion().setFromAxisAngle(ax,ang).multiply(wq); const pq=new THREE.Quaternion(); bone.parent.getWorldQuaternion(pq);
+     bone.quaternion.copy(pq.invert().multiply(nq)); head.armature.updateMatrixWorld(true); };
+   const out={};
+   for (const side of ['Left','Right']) {
+     const s = side==='Left'?1:-1, c = P[side];
+     const arm=A(side+'Arm'), fore=A(side+'ForeArm'), hand=A(side+'Hand');
+     const S=W(arm), Lu=W(fore).distanceTo(S), Lf=W(hand).distanceTo(W(fore));
+     const ud=up.clone().multiplyScalar(-1).addScaledVector(fwd,c.uf).addScaledVector(left,s*c.uo).normalize();
+     const E=S.clone().addScaledVector(ud,Lu);
+     const fd=left.clone().multiplyScalar(-s).addScaledVector(fwd,c.ff).addScaledVector(up,c.fu).normalize();
+     const Wr=E.clone().addScaledVector(fd,Lf);
+     aim(arm,fore,E); aim(fore,hand,Wr); if (c.tw) twist(fore,hand,s*c.tw);
+     for (const b of [side+'Arm', side+'ForeArm']) { const q=A(b).quaternion; out[b+'.quaternion']={x:q.x,y:q.y,z:q.z,w:q.w}; }
+   }
+   const base=JSON.parse(JSON.stringify(head.poseTemplates['straight']));
+   for (const b of ['LeftArm','LeftForeArm','RightArm','RightForeArm']) delete base.props[b+'.rotation'];
+   if (P.hand) { base.props['LeftHand.rotation']=P.hand.L; base.props['RightHand.rotation']=P.hand.R; }
+   Object.assign(base.props, out);
+   head.poseTemplates['cruzados']=base;
+   head.start(); head.setPoseFromTemplate(base, 100);
+   return out;
+ };
+ window.ready=true;
+}catch(e){ window.err=String(e.stack||e); }
+</script></body></html>

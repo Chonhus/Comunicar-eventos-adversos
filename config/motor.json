@@ -1,0 +1,34 @@
+{
+  "motor": "propio",
+  "stt": {
+    "proveedor": "webspeech",
+    "idioma": "es-ES",
+    "alternativas": [
+      "azure"
+    ]
+  },
+  "tts": {
+    "proveedor": "azure",
+    "region": "westeurope",
+    "alternativas": [
+      "elevenlabs",
+      "navegador"
+    ]
+  },
+  "turnos": {
+    "silencioFinTurnoMs": 800,
+    "bargeInMinMs": 400,
+    "bargeInMinPalabras": 2,
+    "silencioIncomodoMs": 12000
+  },
+  "llm": {
+    "personaje": "claude-haiku-5-5",
+    "detector": "claude-haiku-5-5",
+    "evaluador": "claude-sonnet-5-5",
+    "maxTokensPersonaje": 200
+  },
+  "latenciaObjetivoMs": 2000,
+  "debug": {
+    "modoTextoParam": "debug"
+  }
+}

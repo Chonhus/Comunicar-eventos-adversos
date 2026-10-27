@@ -1,0 +1,113 @@
+{
+ "id": "lucia",
+ "out_dir": "OUT_DIR",
+ "macros": {
+  "gender": 0.0,
+  "age": 0.72,
+  "weight": 0.55,
+  "muscle": 0.4,
+  "caucasian": 0.8,
+  "african": 0.08,
+  "asian": 0.12,
+  "height": 0.5,
+  "cupsize": 0.35
+ },
+ "targets": {
+  "mouth/mouth-laugh-lines-out": 0.35,
+  "head/head-oval": 0.3,
+  "nose/nose-volume-incr": 0.15,
+  "mouth/mouth-angles-down": 0.3,
+  "eyes/l-eye-height2-incr": 0.6,
+  "eyes/l-eye-eyefold-up": 0.4,
+  "eyes/l-eye-scale-incr": 0.2,
+  "eyes/r-eye-height2-incr": 0.6,
+  "eyes/r-eye-eyefold-up": 0.4,
+  "eyes/r-eye-scale-incr": 0.2
+ },
+ "skin": "middleage_caucasian_female.mhmat",
+ "assets": [
+  [
+   "eyes",
+   "high-poly.mhclo",
+   "Eyes"
+  ],
+  [
+   "eyebrows",
+   "eyebrow002.mhclo",
+   "Eyebrows"
+  ],
+  [
+   "eyelashes",
+   "eyelashes01.mhclo",
+   "Eyelashes"
+  ],
+  [
+   "teeth",
+   "teeth_base.mhclo",
+   "Teeth"
+  ],
+  [
+   "tongue",
+   "tongue01.mhclo",
+   "Tongue"
+  ],
+  [
+   "hair",
+   "ponytail01.mhclo",
+   "Hair"
+  ],
+  [
+   "clothes",
+   "female_casualsuit01.mhclo",
+   "Clothes",
+   {
+    "solo_pantalon": true,
+    "margen": 0.03
+   }
+  ],
+  [
+   "clothes",
+   "toigo_fisherman_sweater.mhclo",
+   "Clothes"
+  ]
+ ],
+ "tints": {
+  "Human.body": {
+   "rgb": [
+    0.92,
+    0.82,
+    0.76
+   ]
+  },
+  "high-poly": {
+   "rgb": [
+    0.5,
+    0.42,
+    0.36
+   ]
+  },
+  "sweater": {
+   "sat": 0.0,
+   "rgb": [
+    0.55,
+    0.6,
+    0.7
+   ],
+   "gain": 1.0
+  },
+  "ponytail01": {
+   "sat": 0.7,
+   "rgb": [
+    0.75,
+    0.6,
+    0.48
+   ],
+   "gain": 0.9
+  },
+  "female_casualsuit01": {
+   "sat": 0.6,
+   "gain": 0.6
+  }
+ },
+ "clothes_push": 0.009
+}
