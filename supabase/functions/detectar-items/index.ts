@@ -118,7 +118,6 @@ ${body.contexto.map((t) => `${t.rol === 'alumno' ? 'ALUMNO' : 'AVATAR'}: ${t.tex
       systemPrompt: SYSTEM_PROMPT,
       mensajes: [{ role: 'user', content: userPrompt }],
       maxTokens: MAX_TOKENS,
-      temperature: 0,
       signal: req.signal,
     });
   } catch (e) {
@@ -136,7 +135,6 @@ ${body.contexto.map((t) => `${t.rol === 'alumno' ? 'ALUMNO' : 'AVATAR'}: ${t.tex
         systemPrompt: SYSTEM_PROMPT,
         mensajes: [{ role: 'user', content: userPrompt }],
         maxTokens: MAX_TOKENS,
-        temperature: 0,
       });
       parseado = extraerJson(crudo) as typeof parseado;
     } catch {
