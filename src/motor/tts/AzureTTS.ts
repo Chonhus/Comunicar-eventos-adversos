@@ -1,55 +1,125 @@
-// docs/MOTOR.md §8 — voces neurales es-ES vía REST (token temporal de token-voz).
-// En F2 no se capturan visemas todavía (eso es F3, con TalkingHead.speakAudio); aquí
-// solo se sintetiza y reproduce el audio completo de la frase.
-import type { ProveedorTTS, ReproducirOpts } from './tipos';
+// docs/MOTOR.md §8 — voces neurales es-ES vía Azure Speech SDK (no el REST crudo: el
+// SDK es el único camino documentado para suscribirse a `visemeReceived`/`wordBoundary`
+// y así alimentar el lip sync real del avatar — docs/AVATARES.md §4). Token temporal
+// desde `token-voz` (la clave nunca llega al cliente).
+import {
+  ResultReason,
+  SpeechConfig,
+  SpeechSynthesisBoundaryType,
+  SpeechSynthesisOutputFormat,
+  SpeechSynthesizer,
+} from 'microsoft-cognitiveservices-speech-sdk';
+import type { ProveedorTTS, ReproducirOpts, PalabraTiempo } from './tipos';
 import { obtenerCredencialVoz } from './obtenerCredencialVoz';
+import { obtenerAvatarActivo } from '../avatar/reproductorAvatar';
+import { construirSegmentosDesdeEventosAzure, type EventoVisemaAzure } from '../avatar/construirVisemas';
 
 function escaparSsml(texto: string): string {
   return texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+const TICKS_POR_MS = 10_000;
+
 export class AzureTTS implements ProveedorTTS {
-  private audioActual: HTMLAudioElement | null = null;
+  private audioCtx: AudioContext | null = null;
+  private synthActual: SpeechSynthesizer | null = null;
+  private fuenteActual: AudioBufferSourceNode | null = null;
+
+  private obtenerAudioCtx(): AudioContext {
+    if (!this.audioCtx) this.audioCtx = new AudioContext();
+    return this.audioCtx;
+  }
 
   async hablar(frase: string, voz: string, opts: ReproducirOpts = {}): Promise<void> {
+    if (opts.señal?.aborted) return;
     const cred = await obtenerCredencialVoz();
     if (!cred) throw new Error('Azure TTS no disponible (sin token: AZURE_SPEECH_KEY no configurada).');
     if (opts.señal?.aborted) return;
 
+    const speechConfig = SpeechConfig.fromAuthorizationToken(cred.token, cred.region);
+    speechConfig.speechSynthesisVoiceName = voz;
+    speechConfig.speechSynthesisOutputFormat = SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
+
+    // audioConfig null: no reproducir por los altavoces vía el SDK. El audio se
+    // recupera de result.audioData y lo reproduce el avatar (lip sync) o, si no hay
+    // avatar activo, esta misma clase (ver más abajo).
+    const synth = new SpeechSynthesizer(speechConfig, null);
+    this.synthActual = synth;
+
+    const eventosVisema: EventoVisemaAzure[] = [];
+    const palabras: PalabraTiempo[] = [];
+
+    synth.visemeReceived = (_s, e) => {
+      eventosVisema.push({ visemeId: e.visemeId, audioOffsetTicks: e.audioOffset });
+    };
+    synth.wordBoundary = (_s, e) => {
+      if (e.boundaryType !== SpeechSynthesisBoundaryType.Word) return;
+      palabras.push({
+        palabra: e.text,
+        inicioMs: e.audioOffset / TICKS_POR_MS,
+        durMs: e.duration / TICKS_POR_MS,
+      });
+    };
+
     const ssml = `<speak version="1.0" xml:lang="es-ES"><voice name="${voz}">${escaparSsml(frase)}</voice></speak>`;
-    const res = await fetch(`https://${cred.region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-      method: 'POST',
-      signal: opts.señal,
-      headers: {
-        Authorization: `Bearer ${cred.token}`,
-        'Content-Type': 'application/ssml+xml',
-        'X-Microsoft-OutputFormat': 'audio-16khz-64kbitrate-mono-mp3',
-      },
-      body: ssml,
-    });
-    if (!res.ok) throw new Error(`Azure TTS: HTTP ${res.status}`);
 
-    const url = URL.createObjectURL(await res.blob());
-    const audio = new Audio(url);
-    this.audioActual = audio;
+    try {
+      const resultado = await new Promise<import('microsoft-cognitiveservices-speech-sdk').SpeechSynthesisResult>(
+        (resolve, reject) => {
+          synth.speakSsmlAsync(ssml, resolve, (err) => reject(new Error(err)));
+        },
+      );
 
-    return new Promise((resolve, reject) => {
-      audio.onplay = () => opts.onInicio?.();
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
+      if (resultado.reason !== ResultReason.SynthesizingAudioCompleted) {
+        throw new Error(`Azure Speech SDK: síntesis no completada (${resultado.reason})`);
+      }
+      if (opts.señal?.aborted) return;
+
+      const audioCtx = this.obtenerAudioCtx();
+      const audioBuffer = await audioCtx.decodeAudioData(resultado.audioData.slice(0));
+      const duracionMs = audioBuffer.duration * 1000;
+      const visemas = construirSegmentosDesdeEventosAzure(eventosVisema, duracionMs);
+
+      opts.onInicio?.();
+
+      const avatar = obtenerAvatarActivo();
+      if (avatar) {
+        await avatar.hablar(audioBuffer, visemas, palabras, { señal: opts.señal });
+      } else {
+        await this.reproducirSinAvatar(audioBuffer, opts);
+      }
+    } finally {
+      synth.close();
+      if (this.synthActual === synth) this.synthActual = null;
+    }
+  }
+
+  private reproducirSinAvatar(audio: AudioBuffer, opts: ReproducirOpts): Promise<void> {
+    const audioCtx = this.obtenerAudioCtx();
+    const fuente = audioCtx.createBufferSource();
+    fuente.buffer = audio;
+    fuente.connect(audioCtx.destination);
+    this.fuenteActual = fuente;
+
+    return new Promise((resolve) => {
+      let resuelto = false;
+      const terminar = () => {
+        if (resuelto) return;
+        resuelto = true;
+        if (this.fuenteActual === fuente) this.fuenteActual = null;
         resolve();
       };
-      audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error('Error reproduciendo audio de Azure TTS'));
-      };
-      opts.señal?.addEventListener('abort', () => this.detener(), { once: true });
-      audio.play().catch(reject);
+      fuente.onended = terminar;
+      opts.señal?.addEventListener('abort', () => { fuente.stop(); terminar(); }, { once: true });
+      fuente.start();
     });
   }
 
   detener(): void {
-    this.audioActual?.pause();
-    this.audioActual = null;
+    obtenerAvatarActivo()?.detener();
+    this.fuenteActual?.stop();
+    this.fuenteActual = null;
+    this.synthActual?.close();
+    this.synthActual = null;
   }
 }

@@ -11,3 +11,9 @@ export interface ProveedorTTS {
   hablar(frase: string, voz: string, opts?: ReproducirOpts): Promise<void>;
   detener(): void;
 }
+
+export interface PalabraTiempo {
+  palabra: string;
+  inicioMs: number;
+  durMs: number;
+}

@@ -100,7 +100,7 @@ Ruta `/debug/avatar?caso=n1_paracetamol`:
 ## 8. Checklist antes de F3
 - [x] `antonio.glb`, `lucia.glb`, `antonio.jpg`, `lucia.jpg` en `public/avatars/`.
 - [x] Morphs, huesos y materiales verificados en TalkingHead.
-- [ ] Implementar `npm run validar-avatares` (Node) y la página `/debug/avatar`.
+- [x] Implementar `npm run validar-avatares` (Node) y la página `/debug/avatar`.
 - [x] Dos fondos provisionales en `public/fondos/` (Wikimedia Commons, CC BY-SA; ver `public/fondos/CREDITOS.md`). Se sustituirán por fotos propias del hospital.
-- [ ] Añadir en la app una página o pie de "Créditos" con la atribución de los fondos (obligatorio por la licencia).
+- [x] Añadir en la app una página o pie de "Créditos" con la atribución de los fondos (obligatorio por la licencia).
 - [ ] Ajustes estéticos que pida el docente tras ver los avatares en la app (editar `scripts/avatares/config/*.json`).

@@ -16,6 +16,9 @@ export default function InicioPage() {
       >
         Empezar
       </Link>
+      <Link to="/creditos" className="text-xs text-slate-400 underline">
+        Créditos
+      </Link>
     </main>
   );
 }

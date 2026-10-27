@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { casosConfig, obtenerCaso } from '@/lib/config';
 import { useLlamada } from '@/features/llamada/useLlamada';
-import AvatarEstatico from '@/features/llamada/AvatarEstatico';
+import AvatarTalkingHead from '@/features/llamada/AvatarTalkingHead';
 import Subtitulos from '@/features/llamada/Subtitulos';
 import Temporizador from '@/features/llamada/Temporizador';
 import ChecklistPanel from '@/features/llamada/ChecklistPanel';
@@ -23,6 +23,7 @@ export default function LlamadaPage() {
 
   const {
     estado,
+    emocion,
     subtitulo,
     transcripcionParcial,
     turnos,
@@ -47,7 +48,7 @@ export default function LlamadaPage() {
     <main className="flex h-screen flex-col bg-slate-950">
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <AvatarEstatico caso={caso} estado={estado} />
+          <AvatarTalkingHead caso={caso} estado={estado} emocion={emocion} />
           <WebcamLocal activa={webcamActiva} />
           <TranscripcionPlegable turnos={turnos} />
           <Subtitulos textoAvatar={subtitulo} transcripcionParcial={debug ? '' : transcripcionParcial} />

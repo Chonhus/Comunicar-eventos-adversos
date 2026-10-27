@@ -1,10 +1,12 @@
 import casosJson from '../../../config/casos.json';
 import checklistJson from '../../../config/checklist.json';
 import motorJson from '../../../config/motor.json';
+import posesJson from '../../../config/poses.json';
 import {
   CasosConfigSchema,
   ChecklistConfigSchema,
   MotorConfigSchema,
+  PosesConfigSchema,
   type Caso,
 } from './schemas';
 
@@ -19,6 +21,7 @@ function cargar<T>(schema: { parse: (v: unknown) => T }, datos: unknown, nombre:
 export const casosConfig = cargar(CasosConfigSchema, casosJson, 'casos');
 export const checklistConfig = cargar(ChecklistConfigSchema, checklistJson, 'checklist');
 export const motorConfig = cargar(MotorConfigSchema, motorJson, 'motor');
+export const posesConfig = cargar(PosesConfigSchema, posesJson, 'poses');
 
 export function obtenerCaso(id: string): Caso {
   const caso = casosConfig.casos.find((c) => c.id === id);
@@ -32,4 +35,4 @@ export function obtenerCasoPorNivel(nivel: number): Caso {
   return caso;
 }
 
-export type { Caso, ChecklistItem, Alerta, Emocion, MotorConfig, CasosConfig } from './schemas';
+export type { Caso, ChecklistItem, Alerta, Emocion, MotorConfig, CasosConfig, PoseTemplate, PosesConfig } from './schemas';

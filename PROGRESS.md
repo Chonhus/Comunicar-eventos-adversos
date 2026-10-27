@@ -102,3 +102,52 @@ En esta ronda encontré y corregí 3 bugs de interfaz antes de darla por buena: 
 - `speechSynthesis` del navegador falla en Chromium headless (sin motor de voz instalado) — es una limitación del entorno de pruebas, no de la app; debería funcionar en un Chrome/Edge de escritorio normal, pero no se ha podido confirmar con audio real en esta sesión.
 - Barge-in (interrumpir al avatar hablando) está implementado (`bargeInMinPalabras`) pero no se ha podido probar con micrófono real en este entorno.
 - F3 (avatar 3D): pendiente integrar TalkingHead, `npm run validar-avatares`, mapeo de visemas Azure→Oculus y de emociones a moods.
+
+## F3 — Avatar 3D ✅
+
+**Qué se hizo**
+
+*Dependencias nuevas*: `@met4citizen/talkinghead` (1.8.2, trae `three@0.186.1`) y `microsoft-cognitiveservices-speech-sdk` (1.53.0) como runtime; `@gltf-transform/core` + `@gltf-transform/extensions` como dev-dependency para `validar-avatares`.
+
+*Avatar 3D* (`src/features/llamada/AvatarTalkingHead.tsx`): carga el GLB real con `showAvatar({url, body})`, aplica la pose de brazos cruzados de `config/poses.json` vía `playPose()` (confirmado en el código fuente del paquete: `setPoseFromTemplate` sí existe, pero `playPose(nombre)` —que lee de `poseTemplates`— es la forma pública correcta, tal como ya decía `docs/AVATARES.md`), fija la cámara (`setView`) y el mood inicial. Si WebGL no está disponible o el GLB no carga, cae a `AvatarEstatico` (la imagen de F2) sin romper la llamada. Verificado con Playwright + Chromium software-rendering (swiftshader): el avatar se renderiza correctamente con la pose, ropa y fondo de cada caso.
+- **Hallazgo**: `lipsyncModules` por defecto (`en`, `fi`, `lt`) hacen un `import()` dinámico interno que el dev server de Vite no resuelve bien y cuelga la carga del avatar. Como ninguno de esos idiomas es español de todas formas (nunca íbamos a usarlos — pilotamos los visemas nosotros), la solución es pasar `lipsyncModules: []`.
+
+*Emociones y visemas* (`src/motor/avatar/`):
+- `mapaEmociones.ts`: las 5 etiquetas del personaje → los 8 moods reales de TalkingHead (`neutral, happy, angry, sad, fear, disgust, love, sleep`, verificados en `animMoods` del paquete). Decisión: `preocupado→fear`, `aliviado→happy` (no hay mapeo "oficial"; `docs/MOTOR.md` ya anticipaba esta decisión).
+- `mapaVisemas.ts`: Viseme ID de Azure (0-21) → visema Oculus. **Tabla reconstruida de memoria**, no verificable en vivo (esta red no tiene acceso a `learn.microsoft.com` ni `docs.azure.cn`) ni con audio real (sin `AZURE_SPEECH_KEY`). Marcada explícitamente en el código como pendiente de verificar.
+- `construirVisemas.ts`: convierte eventos crudos de Azure (`visemeId` + `audioOffset` en ticks) a segmentos con duración, calculada como la diferencia con el siguiente `audioOffset` (el último se extiende hasta el final del audio) — tal como describe `docs/MOTOR.md §8`.
+- `heuristicaVisemasEs.ts`: respaldo propio palabra→visema para español (reglas grafema→fonema: vocales, dígrafos `ch/ll/rr/qu/gu+e,i`, `h` muda, agrupación de consonantes alineada con los grupos de Azure) para cuando no hay visemas reales (sin Azure, o con `speechSynthesis` del navegador).
+
+*TTS* (`src/motor/tts/AzureTTS.ts`, reescrito): antes usaba el endpoint REST crudo de Azure (sin visemas); ahora usa el **Speech SDK real** (`SpeechConfig.fromAuthorizationToken` + `SpeechSynthesizer` con `audioConfig: null` para no reproducir por los altavoces del propio SDK), suscrito a `visemeReceived` y `wordBoundary`, pidiendo `Riff24Khz16BitMonoPcm` y decodificando con `AudioContext.decodeAudioData` para obtener un `AudioBuffer`. Verificado leyendo los `.d.ts` reales del SDK instalado (no la documentación web, inalcanzable desde esta red): nombres de propiedades de los eventos, firma de `speakSsmlAsync`, etc.
+- Puente avatar↔TTS (`src/motor/avatar/reproductorAvatar.ts`): un registro módulo-a-módulo (`registrarAvatarActivo`/`obtenerAvatarActivo`) que `AvatarTalkingHead` rellena al cargar. `AzureTTS` entrega el audio+visemas+palabras a `head.speakAudio()` (con lip sync) si hay avatar activo, o los reproduce él mismo con Web Audio API si no (p. ej. en tests sin avatar). **Hallazgo del código fuente de TalkingHead**: `speakAudio()` solo procesa visemas/marcadores si `words` no está vacío (están anidados dentro de `if (r.words)`); si no hay palabras se manda una palabra "muda" que ocupe todo el audio solo para destrabar ese camino.
+- `NavegadorTTS` (el respaldo de `speechSynthesis`) no se ha tocado: sigue reproduciendo directamente, sin lip sync, tal como prevé `docs/AVATARES.md §5` ("si faltan visemas → avatar sin lip sync").
+- `MotorBase`/`MotorPropio`/`MotorTexto` **no se han tocado**: `ProveedorTTS.hablar()` mantiene la misma firma, todo el cableado nuevo vive dentro de `AzureTTS` y el registro de avatar.
+
+*Validación y herramientas de depuración*:
+- `scripts/validar-avatares.ts` (antes placeholder): usa `@gltf-transform/core` + `@gltf-transform/extensions` (hace falta registrar `EXT_texture_webp`, si no el loader rechaza los GLB) para comprobar huesos, morph targets obligatorios/recomendados, triángulos, tamaño de textura y tamaño de archivo. Corrido contra los dos GLB reales: **67 morph targets, ~42.000 triángulos, texturas 1024px, sin errores** — coincide con lo que documenta `docs/AVATARES.md`.
+- `/debug/avatar?caso=<id>`: botones de emoción, campo de texto que llama al pipeline real de TTS (mismo camino que la llamada real, así que sirve para probar el lip sync real en cuanto haya `AZURE_SPEECH_KEY`), y sliders de cámara con la vista JSON lista para copiar a `config/casos.json`.
+- `/creditos`: atribución de los fondos CC BY-SA (obligación de la licencia), enlazada desde la pantalla de inicio.
+
+**Cómo probarlo**
+```
+npm run dev              # ir a /llamada/n1_paracetamol/1?debug=1 (avatar 3D real)
+                          # o /debug/avatar?caso=n2_caida_fractura (emociones, cámara, TTS)
+npm run validar-avatares
+npm run test              # 50 tests
+npm run build
+```
+Verificado con Playwright (Chromium + swiftshader, sin GPU real): el avatar carga, aplica pose/ropa/fondo correctos, cambia de mood al pulsar los botones de emoción, y el pipeline de audio no rompe nada aunque no haya `AZURE_SPEECH_KEY` (cae correctamente al respaldo ya existente de F2).
+
+**Decisiones tomadas**
+- `lipsyncModules: []` en las opciones de TalkingHead (ver más arriba).
+- `preocupado→fear`, `aliviado→happy` para el mapeo de moods.
+- Mantener `ProveedorTTS.hablar()` con la misma firma (sin tocar `MotorBase`): el reparto audio+visemas↔avatar vive en un registro aparte (`reproductorAvatar.ts`), para minimizar el riesgo de tocar la máquina de turnos ya verificada en F2.
+- `v→PP` (no `FF`) en la heurística de respaldo en español: en español la v suena como b (betacismo), más cercana a la forma bilabial de PP que a la labiodental de FF.
+
+**Pendiente / no verificado en vivo**
+- **Tabla `mapaVisemas.ts` (Azure 0-21 → Oculus)**: reconstruida de memoria, sin poder consultar la documentación oficial en vivo desde esta red ni probarla con audio real de Azure. Antes de confiar en ella en producción: verificar contra `learn.microsoft.com/.../how-to-speech-synthesis-viseme` o, mejor, observar visualmente el lip sync en `/debug/avatar` en cuanto haya `AZURE_SPEECH_KEY`.
+- **Lip sync con Azure real**: todo el pipeline (SDK, eventos, decodificación de audio, `speakAudio`) está verificado contra los tipos reales del SDK instalado y probado estructuralmente (no revienta sin clave), pero no se ha podido ver ni oír un lip sync real todavía — falta la clave de Azure.
+- **Barge-in con el avatar hablando de verdad**: `stopSpeaking()` está cableado (`ReproductorAvatar.detener()`), pero no se ha podido probar interrumpiendo audio real en curso.
+- **Tamaño del bundle**: con TalkingHead + three.js + el Speech SDK, el JS de producción pasa de ~350 KB a ~430 KB gzip (más el decoder Draco, ~150 KB gzip, que ni siquiera usamos activamente). Candidato claro a `React.lazy()` / `import()` dinámico en la ruta `/llamada` y `/debug/avatar`, para no pagar ese peso en las pantallas previas (inicio, formación, briefing). No se ha hecho en esta fase para no añadir riesgo de última hora.
+- `voz` en `config/casos.json` sigue siendo el placeholder `"PENDIENTE (voz neural es-ES...)"`: hay que elegir nombres reales de voz de Azure (p. ej. `es-ES-AlvaroNeural`) antes de poder probar el TTS de verdad.
+- F4 (feedback IA + evaluación final): pendiente.

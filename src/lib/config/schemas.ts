@@ -105,3 +105,25 @@ export const MotorConfigSchema = z.object({
   }),
 });
 export type MotorConfig = z.infer<typeof MotorConfigSchema>;
+
+// config/poses.json — plantillas poseTemplates de TalkingHead (docs/AVATARES.md §1):
+// props con claves "Hueso.rotation" (Euler XYZ radianes), "Hueso.quaternion" o "Hueso.position" (metros).
+const VectorOCuaternionSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+  w: z.number().optional(),
+});
+
+export const PoseTemplateSchema = z.object({
+  standing: z.boolean().optional(),
+  sitting: z.boolean().optional(),
+  bend: z.boolean().optional(),
+  kneeling: z.boolean().optional(),
+  lying: z.boolean().optional(),
+  props: z.record(z.string(), VectorOCuaternionSchema),
+});
+export type PoseTemplate = z.infer<typeof PoseTemplateSchema>;
+
+export const PosesConfigSchema = z.record(z.string(), PoseTemplateSchema);
+export type PosesConfig = z.infer<typeof PosesConfigSchema>;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { casosConfig, checklistConfig, motorConfig, obtenerCaso, obtenerCasoPorNivel } from './index';
+import { casosConfig, checklistConfig, motorConfig, posesConfig, obtenerCaso, obtenerCasoPorNivel } from './index';
 
 describe('config/*.json', () => {
   it('carga y valida casos.json', () => {
@@ -27,5 +27,11 @@ describe('config/*.json', () => {
 
   it('obtenerCaso lanza si el id no existe', () => {
     expect(() => obtenerCaso('inexistente')).toThrow();
+  });
+
+  it('carga y valida poses.json con una plantilla por cada avatar.pose de casos.json', () => {
+    for (const caso of casosConfig.casos) {
+      expect(posesConfig[caso.avatar.pose]).toBeDefined();
+    }
   });
 });
