@@ -40,6 +40,7 @@ export async function llamarClaude(opts: LlamarClaudeOpts): Promise<string> {
       model: opts.modelo,
       max_tokens: opts.maxTokens,
       temperature: opts.temperature ?? 1,
+      thinking: { type: 'disabled' },
       system: opts.cachearSystemPrompt
         ? [{ type: 'text', text: opts.systemPrompt, cache_control: { type: 'ephemeral' } }]
         : opts.systemPrompt,
@@ -73,6 +74,7 @@ export async function llamarClaudeStream(
       model: opts.modelo,
       max_tokens: opts.maxTokens,
       temperature: opts.temperature ?? 1,
+      thinking: { type: 'disabled' },
       stream: true,
       system: opts.cachearSystemPrompt
         ? [{ type: 'text', text: opts.systemPrompt, cache_control: { type: 'ephemeral' } }]
