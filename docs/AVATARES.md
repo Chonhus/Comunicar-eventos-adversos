@@ -39,8 +39,9 @@ head.poseTemplates['cruzados'] = t;
 // TalkingHead cambia de pose al azar según el mood ('side','hip','straight','wide','turn'):
 for (const n of ['side','hip','straight','wide','turn']) head.poseTemplates[n] = t;
 head.speakWithHands = () => {};   // que no descruce los brazos al hablar
-head.setPoseFromTemplate(t, 300);
+head.playPose('cruzados');        // NO existe setPoseFromTemplate(); el método real es playPose(nombre, onprogress, dur, ndx, scale)
 ```
+> Corrección sobre la spec original: el método se llama `playPose`, no `setPoseFromTemplate` (no existe en la API de TalkingHead 1.8). Verificar en F3 los valores por defecto de `dur`/`scale` contra la versión instalada antes de ajustarlos.
 - Verificado: se mantiene con los moods `neutral`, `angry`, `sad`, `happy` y también cuando TalkingHead refleja la pose (izquierda/derecha). En `angry` TalkingHead cierra los puños: es correcto para Lucía.
 - Encuadre recomendado (plano de videollamada con cara y brazos): `head.setView('upper', { cameraDistance: 0.25, cameraY: 0.12 })`.
 

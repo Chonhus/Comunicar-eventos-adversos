@@ -101,7 +101,7 @@ REGLAS:
 
 ## 8. TTS (texto a voz) y lip sync
 Interfaz `ProveedorTTS.sintetizar(frase, voz) → { audio: AudioBuffer | ArrayBuffer, visemas?: [{ visema, inicioMs, durMs }], palabras?: [{ palabra, inicioMs, durMs }] }`.
-- **`azure` (por defecto):** voces neurales es-ES (elegir una masculina mayor para Antonio y una femenina madura para Lucía; configurable en `config/motor.json`). Usar SSML para ritmo y, si la voz lo permite, estilo emocional según la etiqueta. Capturar los **eventos de visemas** y convertirlos al formato que espera TalkingHead (mapear IDs de visema de Azure a visemas Oculus). Token temporal desde `token-voz`.
+- **`azure` (por defecto):** voces neurales es-ES (elegir una masculina mayor para Antonio y una femenina madura para Lucía; configurable en `config/motor.json`). Usar SSML para ritmo y, si la voz lo permite, estilo emocional según la etiqueta. Suscribirse al evento `visemeReceived` del `SpeechSynthesizer` (no requiere el elemento `mstts:viseme` del SSML: ese elemento solo sirve para pedir blendshapes ARKit, que no usamos). Cada evento trae `visemeId` (entero Microsoft 0–21) y `audioOffset` (en *ticks* de 100 ns → dividir entre 10 000 para ms), **sin duración**: la duración de cada visema se calcula como la diferencia con el `audioOffset` del siguiente evento (el último se extiende hasta el final del audio). Mapear `visemeId` (0–21) a visema Oculus y pasar el resultado a `speakAudio({ visemes, vtimes, vdurations })` de TalkingHead. Token temporal desde `token-voz`.
 - **`elevenlabs` (alternativa):** endpoint con marcas de tiempo por carácter → derivar palabras y dejar que TalkingHead genere visemas, o usar su sincronía por palabras. La clave debe pasar por la Edge Function (proxy).
 - **Cola de reproducción:** sintetizar la frase n+1 mientras suena la n. Reproducción secuencial sin huecos.
 - Verificar en el README de TalkingHead el método para reproducir audio con visemas/palabras (p. ej. su función de "speak audio") y el formato exacto esperado.
@@ -109,7 +109,7 @@ Interfaz `ProveedorTTS.sintetizar(frase, voz) → { audio: AudioBuffer | ArrayBu
 ## 9. Avatar (TalkingHead)
 - Escena: plano medio, fondo de habitación de hospital o sala de información (imagen o escena sencilla), luz suave.
 - Estados visuales: escuchando (asentimientos sutiles, mirada a cámara), pensando (breve mirada lateral), hablando (lip sync).
-- Emoción → `mood`/expresión de TalkingHead según la etiqueta.
+- Emoción → `mood`/expresión de TalkingHead según la etiqueta. TalkingHead 1.8 solo trae `setMood()` con `neutral, happy, angry, sad, fear, disgust, love, sleep`: no hay `preocupado` ni `aliviado` nativos. En F3 decidir mapeo (p. ej. `preocupado→sad` atenuado, `aliviado→happy` atenuado) o añadir esas dos entradas a `head.animMoods`.
 - Carga diferida del GLB y fallback a imagen estática si WebGL falla.
 
 ## 10. Latencia — presupuesto orientativo
