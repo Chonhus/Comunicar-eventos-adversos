@@ -28,3 +28,29 @@ Verificado con Playwright: `/` carga, el botón "Empezar" navega a `/consentimie
 
 **Pendiente**
 - Nada bloqueante para F1. `npm run validar-avatares` queda como script placeholder (`tsx scripts/validar-avatares.ts`, aún no implementado) hasta F3.
+
+## F1 — Módulo formativo ✅
+
+**Qué se hizo**
+- `src/features/formacion/contenido.ts`: los 5 bloques y las 5 preguntas del mini-test de `docs/FORMACION.md`, tipados (`tipos.ts`).
+- `FormacionPage` reescrita: tarjeta por bloque (`TarjetaBloque`) con barra de progreso, navegación Anterior/Siguiente, soporte de **negrita** vía un parser mínimo (`TextoConEnfasis`, sin `dangerouslySetInnerHTML` ni dependencia MDX).
+- `MiniTest`: una pregunta a la vez, feedback inmediato (verde/rojo) al elegir, nota final sobre 10.
+- Al terminar el test se muestra la nota y un botón "Continuar al Nivel 1" que navega a `/briefing/:casoId` usando `obtenerCasoPorNivel(1)` (ya no es el placeholder de F0).
+- Tests: `contenido.test.ts` (5 bloques, 5 preguntas, cada pregunta con exactamente una opción correcta).
+
+**Cómo probarlo**
+```
+npm run dev   # ir a /formacion, pasar los 5 bloques, responder el mini-test
+npm run test
+npm run build
+```
+Verificado con Playwright: recorrido completo de los 5 bloques → mini-test → nota (comprobado que 5/5 correctas da 10/10) → navegación a `/briefing/n1_paracetamol` con el título y avatar reales del caso. Sin errores de consola.
+
+**Decisiones tomadas**
+- La nota del mini-test se calcula y se muestra en cliente, pero **no se persiste todavía** (no hay tabla `progreso_formacion` ni Edge Function en F0–F2; la persistencia es F5 según `docs/SPEC.md §10`). Queda anotado como pendiente.
+- Mini-test secuencial (una pregunta por pantalla) en vez de las 5 a la vez, para dar el feedback inmediato que pide `docs/SPEC.md §3.3` sin complicar el estado.
+- Markdown reducido a `**negrita**` con un parser propio de 10 líneas en vez de añadir una dependencia MDX, ya que el contenido de `docs/FORMACION.md` no usa más que eso.
+
+**Pendiente**
+- Persistir `progreso_formacion` (bloque completado, nota del test) cuando se aborde F5.
+- Revisión de contenido por el equipo docente (el propio `docs/FORMACION.md` se marca como borrador).
