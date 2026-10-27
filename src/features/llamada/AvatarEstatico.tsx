@@ -2,6 +2,7 @@
 // personaje sobre su fondo, con un indicador de estado (docs/AVATARES.md §5).
 import type { Caso } from '@/lib/config/schemas';
 import type { EstadoMotor } from '@/motor';
+import { rutaPublica } from '@/lib/rutaPublica';
 
 const ETIQUETA_ESTADO: Record<EstadoMotor, string> = {
   conectando: 'Conectando…',
@@ -15,10 +16,10 @@ export default function AvatarEstatico({ caso, estado }: { caso: Caso; estado: E
   return (
     <div
       className="relative flex h-full w-full items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: `url(${caso.avatar.fondo})` }}
+      style={{ backgroundImage: `url(${rutaPublica(caso.avatar.fondo)})` }}
     >
       <img
-        src={caso.avatar.imagenRespaldo}
+        src={rutaPublica(caso.avatar.imagenRespaldo)}
         alt={caso.avatar.nombre}
         className={`h-64 w-64 rounded-full border-4 object-cover shadow-lg transition-all md:h-80 md:w-80 ${
           estado === 'hablando' ? 'border-green-400' : 'border-white/70'

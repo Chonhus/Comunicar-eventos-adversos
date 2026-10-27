@@ -9,6 +9,7 @@ import type { Emocion } from '@/lib/config/schemas';
 import { posesConfig } from '@/lib/config';
 import { emocionAMood } from '@/motor/avatar/mapaEmociones';
 import { registrarAvatarActivo, type ReproductorAvatar } from '@/motor/avatar/reproductorAvatar';
+import { rutaPublica } from '@/lib/rutaPublica';
 import AvatarEstatico from './AvatarEstatico';
 
 const ETIQUETA_ESTADO: Record<EstadoMotor, string> = {
@@ -123,7 +124,7 @@ export default function AvatarTalkingHead({
     headRef.current = head;
 
     head
-      .showAvatar({ url: caso.avatar.glb, body: caso.avatar.body })
+      .showAvatar({ url: rutaPublica(caso.avatar.glb), body: caso.avatar.body })
       .then(() => {
         if (cancelado) return;
 
@@ -184,7 +185,7 @@ export default function AvatarTalkingHead({
   return (
     <div
       className="relative h-full w-full bg-cover bg-center"
-      style={{ backgroundImage: `url(${caso.avatar.fondo})` }}
+      style={{ backgroundImage: `url(${rutaPublica(caso.avatar.fondo)})` }}
     >
       <div ref={contenedorRef} className="h-full w-full" />
       {!cargado && (

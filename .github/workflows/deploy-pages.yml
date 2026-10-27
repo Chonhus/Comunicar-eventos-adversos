@@ -1,0 +1,67 @@
+# Despliega el frontend (Vite) a GitHub Pages en cada push a la rama por defecto.
+#
+# Paso manual único, antes del primer despliegue: en el repo, Settings > Pages >
+# "Build and deployment" > Source: elegir "GitHub Actions" (no "Deploy from a
+# branch"). Sin eso, deploy-pages no tiene dónde publicar.
+#
+# Secrets que hacen falta en Settings > Secrets and variables > Actions:
+#   VITE_SUPABASE_URL       (de tu proyecto Supabase: Project Settings > API)
+#   VITE_SUPABASE_ANON_KEY  (idem — es una clave pública, pensada para el cliente,
+#                            pero igualmente se guarda como secret para no tenerla
+#                            suelta en el workflow ni tener que tocar este archivo
+#                            si cambia)
+#
+# El backend (Edge Functions, Postgres) no se despliega aquí: eso se hace aparte con
+# `supabase functions deploy` / `supabase db push` contra tu proyecto — ver
+# PROGRESS.md "F5" y "¿Lo puedo probar?" en el historial de la conversación.
+name: Deploy a GitHub Pages
+
+on:
+  push:
+    branches: [claude/new-session-72ysub]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Construir
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          GITHUB_PAGES_BASE: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
