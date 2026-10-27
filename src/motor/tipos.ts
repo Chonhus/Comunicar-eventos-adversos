@@ -1,6 +1,6 @@
 // Interfaz común del motor de conversación — docs/MOTOR.md §2.
 import type { Caso, Emocion } from '@/lib/config/schemas';
-import type { ChecklistEngine } from '@/features/llamada/ChecklistEngine';
+import type { ChecklistEngine, ResultadoDeteccion } from '@/features/llamada/ChecklistEngine';
 
 export type EstadoMotor = 'conectando' | 'escuchando' | 'pensando' | 'hablando' | 'error';
 
@@ -27,7 +27,9 @@ export type EventosMotor = {
   estado: (e: EstadoMotor) => void;
   emocion: (e: Emocion) => void;
   metricas: (m: MetricasEvento) => void;
-  checklistActualizado: () => void;
+  // F5: lleva el resultado para poder persistir eventos_checklist (docs/SPEC.md §5)
+  // además de re-renderizar el panel.
+  checklistActualizado: (resultado: ResultadoDeteccion) => void;
 };
 
 export interface MotorConversacion {

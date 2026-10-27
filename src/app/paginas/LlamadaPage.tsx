@@ -10,6 +10,7 @@ import ModoTextoDebug from '@/features/llamada/ModoTextoDebug';
 import WebcamLocal from '@/features/llamada/WebcamLocal';
 import TranscripcionPlegable from '@/features/llamada/TranscripcionPlegable';
 import type { DatosLlamadaParaFeedback } from '@/motor/evaluacion/tipos';
+import { finalizarIntento } from '@/lib/persistencia';
 
 export default function LlamadaPage() {
   const { casoId, intento } = useParams<{ casoId: string; intento: string }>();
@@ -31,13 +32,15 @@ export default function LlamadaPage() {
     turnos,
     checklistVersion,
     errorMensaje,
+    intentoId,
     enviarTexto,
     silenciarMicro,
     obtenerChecklist,
-  } = useLlamada(caso, debug);
+  } = useLlamada(caso, debug, Number(intento ?? '1'));
 
   function colgar() {
     const checklist = obtenerChecklist();
+    const duracionSeg = Math.round((Date.now() - inicioRef.current) / 1000);
     const datos: DatosLlamadaParaFeedback = {
       casoId: caso.id,
       intento: Number(intento ?? '1'),
@@ -49,8 +52,10 @@ export default function LlamadaPage() {
           .map((i) => ({ id: i.id, calidad: i.calidad as 'parcial' | 'completo', evidencia: i.evidencia })),
         alertas: checklist.obtenerAlertas(),
       },
-      duracionSeg: Math.round((Date.now() - inicioRef.current) / 1000),
+      duracionSeg,
+      intentoId,
     };
+    if (intentoId) void finalizarIntento(intentoId, duracionSeg);
     navigate(`/feedback/${caso.id}-${intento}`, { state: datos });
   }
 

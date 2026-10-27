@@ -1,13 +1,84 @@
 // docs/SPEC.md §3.7 — resumen de los 4 intentos (2 niveles x 2 intentos), nota de
 // formación y descarga en PDF.
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { casosConfig } from '@/lib/config';
 import { obtenerNotaFormacion, obtenerTodosLosResultados } from '@/lib/progreso';
 import { generarPdfEvaluacionFinal } from '@/lib/exportarPdf';
+import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
+import { guardarEncuesta } from '@/lib/persistencia';
+
+const PREGUNTAS_LIKERT = [
+  { clave: 'utilidad', texto: '¿Qué tan útil te ha resultado esta práctica?' },
+  { clave: 'realismo', texto: '¿Qué tan realista te ha parecido la conversación con el avatar?' },
+  { clave: 'confianza', texto: '¿Te sientes más preparado/a para comunicar un evento adverso?' },
+];
+
+function EncuestaSatisfaccion({ alumnoId }: { alumnoId: string }) {
+  const [likert, setLikert] = useState<Record<string, number>>({});
+  const [comentario, setComentario] = useState('');
+  const [enviada, setEnviada] = useState(false);
+
+  async function enviar() {
+    await guardarEncuesta(alumnoId, { ...likert, comentario });
+    setEnviada(true);
+  }
+
+  if (enviada) {
+    return <p className="mt-8 text-sm text-slate-500">Gracias por tu opinión.</p>;
+  }
+
+  const completa = PREGUNTAS_LIKERT.every((p) => likert[p.clave] !== undefined);
+
+  return (
+    <section className="mt-8 rounded-xl border border-slate-200 p-5">
+      <h2 className="font-semibold">Encuesta de satisfacción (opcional)</h2>
+      <div className="mt-3 flex flex-col gap-4">
+        {PREGUNTAS_LIKERT.map((p) => (
+          <div key={p.clave}>
+            <p className="text-sm text-slate-700">{p.texto}</p>
+            <div className="mt-1 flex gap-2">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setLikert((prev) => ({ ...prev, [p.clave]: n }))}
+                  className={`h-8 w-8 rounded-full text-sm ${
+                    likert[p.clave] === n ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div>
+          <p className="text-sm text-slate-700">¿Algo más que quieras comentar?</p>
+          <textarea
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            rows={3}
+            className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm"
+          />
+        </div>
+        <button
+          type="button"
+          disabled={!completa}
+          onClick={() => void enviar()}
+          className="w-fit rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+        >
+          Enviar
+        </button>
+      </div>
+    </section>
+  );
+}
 
 export default function EvaluacionFinalPage() {
   const resultados = obtenerTodosLosResultados();
   const notaFormacion = obtenerNotaFormacion();
+  const alumno = obtenerAlumnoLocal();
 
   if (resultados.length === 0) {
     return (
@@ -70,6 +141,8 @@ export default function EvaluacionFinalPage() {
           Volver al inicio
         </Link>
       </div>
+
+      {alumno && <EncuestaSatisfaccion alumnoId={alumno.id} />}
     </main>
   );
 }

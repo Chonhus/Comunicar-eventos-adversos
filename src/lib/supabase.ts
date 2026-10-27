@@ -9,4 +9,8 @@ if (!url || !anonKey) {
   );
 }
 
-export const supabase = createClient(url ?? '', anonKey ?? '');
+// createClient() revienta si se le pasa una clave vacía (no solo "falsy", literalmente
+// lanza "supabaseKey is required"). Con un valor de relleno no revienta al arrancar;
+// cualquier llamada real seguirá fallando igual que el resto de la app cuando falta
+// configuración (error de red claro, no un crash del módulo).
+export const supabase = createClient(url || 'http://localhost:0', anonKey || 'config-pendiente');

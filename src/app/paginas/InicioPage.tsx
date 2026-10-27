@@ -11,7 +11,7 @@ export default function InicioPage() {
         una videollamada simulada.
       </p>
       <Link
-        to="/consentimiento"
+        to="/acceso"
         className="rounded-lg bg-slate-900 px-5 py-2.5 font-medium text-white hover:bg-slate-700"
       >
         Empezar

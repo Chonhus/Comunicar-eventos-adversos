@@ -5,6 +5,8 @@ import TarjetaBloque from '@/features/formacion/TarjetaBloque';
 import MiniTest from '@/features/formacion/MiniTest';
 import { obtenerCasoPorNivel } from '@/lib/config';
 import { guardarNotaFormacion } from '@/lib/progreso';
+import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
+import { guardarProgresoBloque } from '@/lib/persistencia';
 
 type Fase = { tipo: 'bloque'; indice: number } | { tipo: 'test' } | { tipo: 'resultado'; nota: number };
 
@@ -19,6 +21,11 @@ export default function FormacionPage() {
   function continuarAlNivel1() {
     const caso = obtenerCasoPorNivel(1);
     navigate(`/briefing/${caso.id}`);
+  }
+
+  function marcarBloqueCompletado(indice: number, notaTest?: number) {
+    const alumno = obtenerAlumnoLocal();
+    if (alumno) void guardarProgresoBloque(alumno.id, indice, notaTest);
   }
 
   return (
@@ -47,11 +54,11 @@ export default function FormacionPage() {
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  fase.indice === bloques.length - 1
-                    ? setFase({ tipo: 'test' })
-                    : setFase({ tipo: 'bloque', indice: fase.indice + 1 })
-                }
+                onClick={() => {
+                  marcarBloqueCompletado(fase.indice);
+                  if (fase.indice === bloques.length - 1) setFase({ tipo: 'test' });
+                  else setFase({ tipo: 'bloque', indice: fase.indice + 1 });
+                }}
                 className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
               >
                 {fase.indice === bloques.length - 1 ? 'Empezar mini-test' : 'Siguiente'}
@@ -64,6 +71,7 @@ export default function FormacionPage() {
           <MiniTest
             onFinalizar={(nota) => {
               guardarNotaFormacion(nota);
+              marcarBloqueCompletado(bloques.length, nota);
               setFase({ tipo: 'resultado', nota });
             }}
           />

@@ -1,11 +1,12 @@
 // docs/SPEC.md §3.6 / §4.2 — Edge Function evaluar-intento → puntuación + feedback.
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { casosConfig, checklistConfig, obtenerCaso } from '@/lib/config';
+import { casosConfig, checklistConfig, motorConfig, obtenerCaso } from '@/lib/config';
 import { llamarEvaluarIntento } from '@/motor/evaluacion/llamarEvaluarIntento';
 import { calcularPuntuacion } from '@/motor/evaluacion/calcularPuntuacion';
 import type { DatosLlamadaParaFeedback, EvaluacionIntento } from '@/motor/evaluacion/tipos';
 import { guardarResultadoIntento, obtenerUltimoResultado } from '@/lib/progreso';
+import { guardarEvaluacion } from '@/lib/persistencia';
 
 type Estado = { tipo: 'cargando' } | { tipo: 'error'; mensaje: string } | { tipo: 'listo'; evaluacion: EvaluacionIntento; puntuacion: number };
 
@@ -53,6 +54,7 @@ export default function FeedbackPage() {
           duracionSeg: datos.duracionSeg,
           fecha: Date.now(),
         });
+        if (datos.intentoId) void guardarEvaluacion(datos.intentoId, puntuacion, evaluacion, motorConfig.llm.evaluador);
         setEstado({ tipo: 'listo', evaluacion, puntuacion });
       })
       .catch((e: Error) => {

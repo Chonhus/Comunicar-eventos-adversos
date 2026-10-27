@@ -60,6 +60,8 @@ export interface DatosLlamadaParaFeedback {
     alertas: AlertaDetectorParaEvaluar[];
   };
   duracionSeg: number;
+  /** Fila de `intentos` en Supabase (F5); null si no se pudo crear o no hay alumno logueado. */
+  intentoId: string | null;
 }
 
 export interface PeticionEvaluarIntento {

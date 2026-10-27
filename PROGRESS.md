@@ -193,3 +193,114 @@ Verificado con Playwright, interceptando solo la respuesta de `evaluar-intento` 
 - Evaluación real con conversaciones de voz de verdad (con avatar y micrófono reales): el pipeline está verificado con una transcripción de ejemplo real contra la API, pero no con una sesión completa de voz.
 - F5 (persistencia Supabase + panel docente): pendiente — en cuanto se aborde, hay que migrar `src/lib/progreso.ts` a leer/escribir en Supabase en vez de `sessionStorage` (la interfaz pública del módulo puede quedarse igual).
 - El bundle de producción sigue creciendo (ahora con `jspdf`, que trae `html2canvas` de transitiva aunque no la usamos para nada: nuestro PDF es solo texto). Sigue pendiente el `code-splitting` ya anotado en F3.
+
+## F5 — Persistencia y panel docente ⚠️ no probado contra una base de datos real
+
+**Importante antes de leer esto:** este entorno no tiene Docker funcionando (el
+daemon no arranca en este sandbox), así que **no se ha podido levantar un Supabase
+local ni probar nada de esta fase contra una base de datos real** — ni las
+migraciones, ni las políticas RLS, ni el flujo de acceso, ni el panel docente. Es la
+primera fase del proyecto sin verificación en vivo (F2–F4 sí se probaron contra la
+API de Anthropic real). Todo lo de abajo está escrito con cuidado contra patrones
+estándar de Postgres/Supabase (no son APIs exóticas), pero hay que correr
+`npx supabase start && supabase db reset` y probarlo de verdad en cuanto se pueda,
+antes de dar la fase por buena de verdad.
+
+**Qué se hizo**
+
+*Modelo de acceso* (decisión tomada con el usuario, docs/SPEC.md §3.1 dejaba dos
+opciones abiertas): el **alumno** entra con **código de grupo + alias** (sin email ni
+contraseña), autenticado por debajo con `supabase.auth.signInAnonymously()` para
+tener un `auth.uid()` estable con el que las políticas RLS protegen sus datos. El
+**docente** usa **email + contraseña** (Supabase Auth normal): necesita identificarse
+de forma estable desde cualquier dispositivo, cosa que una sesión anónima no permite.
+`alumnos.id` referencia `auth.users.id` en los dos casos — la misma tabla distingue
+el rol (`alumno` | `docente`).
+
+*Migraciones* (`supabase/migrations/20261027120000_f5_persistencia.sql`): las 7 tablas
+de `docs/SPEC.md §5` (grupos, alumnos, progreso_formacion, intentos, turnos,
+eventos_checklist, evaluaciones, encuestas) con RLS en todas. Para evitar la
+recursión típica de "el docente lee las filas de su grupo" (una política de
+`alumnos` que necesita leer la propia tabla `alumnos` para saber si eres docente), se
+usa una función `es_docente_del_grupo(grupo_id)` con `security definer` — el patrón
+recomendado por Supabase para este caso exacto. `supabase/seed.sql` crea un grupo de
+prueba (`DEMO2026`) y documenta cómo dar de alta un docente a mano (no hay UI para
+esto, es decisión explícita de alcance).
+
+*Acceso*:
+- `src/lib/accesoAlumno.ts`: sesión anónima + unirse a un grupo por código (`ilike`
+  para que no importen mayúsculas/minúsculas) + alias; guarda el resultado en
+  `localStorage` para no volver a pedirlo en visitas siguientes.
+- `src/lib/accesoDocente.ts`: login con email/contraseña + comprobación de que la
+  fila de `alumnos` tiene `rol = 'docente'` (si no, cierra la sesión y avisa).
+- `AccesoPage.tsx` (nueva, antes de Consentimiento) y `DocenteLoginPage.tsx` (nueva).
+- **Bug real encontrado y corregido, independiente de F5**: `src/lib/supabase.ts`
+  llamaba a `createClient(url ?? '', anonKey ?? '')`, y la librería **revienta** si
+  la clave es una cadena vacía (no solo "falsy" — lanza `supabaseKey is required`
+  de forma síncrona al cargar el módulo). Nadie lo había notado porque F2-F4 llaman
+  a las Edge Functions con `fetch` directo, nunca con el cliente de `supabase-js`:
+  `accesoAlumno.ts` es el primer código que de verdad lo usa, y expuso el bug
+  (pantalla en blanco). Arreglado con un valor de relleno no vacío cuando falta la
+  configuración, igual que el resto de la app (falla la llamada de red real, no el
+  arranque del módulo).
+
+*Persistencia* (`src/lib/persistencia.ts`, todas las funciones fallan "en silencio"
+con un `console.warn`, sin romper la UI — la app sigue funcionando sin backend como
+en F2-F4 si el alumno no ha entrado con código de grupo, o si Supabase no responde):
+- `progreso_formacion`: una fila por bloque del módulo formativo + la nota del
+  mini-test (wiring en `FormacionPage`).
+- `intentos`: se crea al empezar la llamada (`useLlamada`, con `upsert` por
+  `(alumno_id, caso_id, numero)` para que sea idempotente), se cierra al colgar
+  (`fin`, `duracion_s`, `estado`).
+- `turnos` y `eventos_checklist`: en vivo, turno a turno y detección a detección.
+  Para poder persistir los eventos de checklist individuales (antes el evento
+  `checklistActualizado` del motor no llevaba el detalle, solo avisaba "algo
+  cambió"), se amplió `EventosMotor.checklistActualizado` para que lleve el
+  `ResultadoDeteccion` completo — cambio pequeño y localizado en `motor/tipos.ts` y
+  `MotorBase.ts`, sin tocar la lógica de turnos ya probada en F2.
+- `evaluaciones`: al recibir el resultado de `evaluar-intento` (`FeedbackPage`).
+- `encuestas`: encuesta de satisfacción opcional (3 preguntas Likert + 1 abierta,
+  `docs/SPEC.md §3.7`) en `EvaluacionFinalPage`, solo visible si hay alumno logueado.
+
+*Panel docente* (`DocentePanelPage.tsx`, nueva): tabla de alumnos del grupo con nº de
+intentos y última puntuación; lista de intentos (clicable) con transcripción y
+resumen de la evaluación; botón "Exportar CSV" (`src/lib/csv.ts`, sin librería, con
+test unitario del escapado). Las consultas no filtran por grupo explícitamente en el
+cliente — las políticas RLS ya limitan lo que un docente puede leer.
+
+**Cómo probarlo** (en cuanto haya Docker o un proyecto en la nube)
+```
+npx supabase start
+supabase db reset   # aplica migraciones + seed.sql
+npm run dev
+# /acceso con el código DEMO2026 -> flujo normal del alumno
+# Dar de alta un docente (ver supabase/seed.sql) -> /docente/login -> /docente
+```
+En esta sesión solo se ha podido comprobar, con Playwright y sin backend real: que
+`/acceso`, `/docente/login` y el guard de `/docente` renderizan y no revientan; que
+la llamada completa (con un alumno simulado en `localStorage`) no se rompe aunque
+todas las escrituras a Supabase fallen (quedan como `console.warn`); build, lint y
+66 tests en verde.
+
+**Decisiones tomadas**
+- `src/lib/progreso.ts` (sessionStorage, de F4) se mantiene **sin tocar**, como
+  caché local: `persistencia.ts` escribe en Supabase en paralelo, de forma aditiva.
+  Evita reescribir toda la lógica de F4 y las páginas siguen funcionando igual sin
+  login (modo `?debug=1` suelto).
+- La puntuación se sigue calculando en el cliente (decisión de F4) y es el cliente
+  quien la escribe en `evaluaciones.puntuacion`: un alumno con herramientas de
+  desarrollador podría falsear su propia puntuación. Aceptable para una herramienta
+  formativa (no certificadora); si se necesitara integridad real, habría que mover
+  el cálculo a una Edge Function con service role que escriba ella misma la fila.
+- No hay tipos TypeScript generados para el esquema de Supabase (`supabase gen
+  types` necesita una base de datos real para conectarse): las consultas usan el
+  cliente sin tipar y objetos `as unknown as ...` donde hace falta. Pendiente para
+  cuando haya una instancia real.
+- No hay UI para crear grupos ni para dar de alta docentes (fuera de alcance de F5,
+  documentado en `supabase/seed.sql`): se hace a mano en Studio o con SQL.
+
+**Pendiente**
+- **Verificar todo esto contra un Supabase real**: migraciones, sobre todo las
+  políticas RLS del docente (el patrón de recursión con `security definer` es
+  estándar pero no se ha ejecutado ni una vez), y el flujo completo de acceso.
+- F6 (pulido): STT de producción, móvil/Safari, accesibilidad, errores de verdad.

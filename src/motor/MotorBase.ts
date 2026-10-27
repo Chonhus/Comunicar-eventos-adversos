@@ -124,7 +124,7 @@ export abstract class MotorBase implements MotorConversacion {
     });
     if (resultado) {
       this.checklist.aplicarDeteccion(resultado);
-      this.emisor.emit('checklistActualizado');
+      this.emisor.emit('checklistActualizado', resultado);
     }
   }
 

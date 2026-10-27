@@ -2,14 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { crearMotor } from '@/motor';
 import type { Caso, Emocion } from '@/lib/config/schemas';
 import type { EstadoMotor } from '@/motor';
-import type { ChecklistEngine } from './ChecklistEngine';
+import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
+import { crearIntento, guardarEventoChecklist, guardarTurno } from '@/lib/persistencia';
+import type { ChecklistEngine, ResultadoDeteccion } from './ChecklistEngine';
 
 export interface TurnoVisible {
   rol: 'alumno' | 'avatar';
   texto: string;
 }
 
-export function useLlamada(caso: Caso, debug: boolean) {
+export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
   const motorRef = useRef(crearMotor(debug));
   const [estado, setEstado] = useState<EstadoMotor>('conectando');
   const [emocion, setEmocion] = useState<Emocion>(caso.emocionInicial);
@@ -18,9 +20,22 @@ export function useLlamada(caso: Caso, debug: boolean) {
   const [turnos, setTurnos] = useState<TurnoVisible[]>([]);
   const [checklistVersion, setChecklistVersion] = useState(0);
   const [errorMensaje, setErrorMensaje] = useState<string | null>(null);
+  // F5: si el alumno entró con código de grupo, se persiste en Supabase (docs/SPEC.md
+  // §5); si no (p. ej. ?debug=1 suelto, sin pasar por /acceso), la llamada funciona
+  // igual que en F2-F4, solo que sin guardar nada.
+  const [intentoId, setIntentoId] = useState<string | null>(null);
+  const intentoIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const motor = motorRef.current;
+    const alumno = obtenerAlumnoLocal();
+
+    if (alumno) {
+      crearIntento(alumno.id, caso.id, numeroIntento).then((id) => {
+        intentoIdRef.current = id;
+        setIntentoId(id);
+      });
+    }
 
     const onEstado = (e: EstadoMotor) => {
       setEstado(e);
@@ -40,15 +55,27 @@ export function useLlamada(caso: Caso, debug: boolean) {
       setSubtitulo(t.texto);
       if (t.final) {
         setTurnos((prev) => [...prev, { rol: 'avatar', texto: t.texto }]);
+        if (intentoIdRef.current) void guardarTurno(intentoIdRef.current, { rol: 'avatar', texto: t.texto });
       }
     };
     const onTurnoAlumno = (t: { texto: string }) => {
       setTurnos((prev) => [...prev, { rol: 'alumno', texto: t.texto }]);
       setTranscripcionParcial('');
       setSubtitulo('');
+      if (intentoIdRef.current) void guardarTurno(intentoIdRef.current, { rol: 'alumno', texto: t.texto });
     };
     const onParcial = (t: string) => setTranscripcionParcial(t);
-    const onChecklist = () => setChecklistVersion((v) => v + 1);
+    const onChecklist = (resultado: ResultadoDeteccion) => {
+      setChecklistVersion((v) => v + 1);
+      const id = intentoIdRef.current;
+      if (!id) return;
+      for (const c of resultado.cumplidos) {
+        void guardarEventoChecklist(id, { tipo: 'cumplido', itemId: c.id, calidad: c.calidad, evidencia: c.evidencia });
+      }
+      for (const a of resultado.alertas) {
+        void guardarEventoChecklist(id, { tipo: 'alerta', itemId: a.id, evidencia: a.evidencia });
+      }
+    };
 
     motor.on('estado', onEstado);
     motor.on('emocion', onEmocion);
@@ -87,6 +114,7 @@ export function useLlamada(caso: Caso, debug: boolean) {
     turnos,
     checklistVersion,
     errorMensaje,
+    intentoId,
     enviarTexto,
     silenciarMicro,
     obtenerChecklist,
