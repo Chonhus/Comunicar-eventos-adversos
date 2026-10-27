@@ -16,6 +16,16 @@ interface LlamarClaudeOpts {
   signal?: AbortSignal;
 }
 
+// Verificado contra la API real (ver PROGRESS.md): "claude-haiku-5-5" solo acepta
+// thinking:{type:"disabled"} (rechaza "between_tools"); "claude-sonnet-5-5" es al
+// revés, solo acepta thinking:{type:"between_tools"} (rechaza "disabled") — su
+// mensaje de error dice que ese modelo no "piensa" antes de responder salvo entre
+// llamadas a herramientas, que aquí no usamos, así que el efecto práctico es el mismo
+// que deshabilitarlo. No hay un valor único que sirva para ambos modelos.
+function thinkingParaModelo(modelo: string): { type: 'disabled' | 'between_tools' } {
+  return { type: modelo.includes('haiku') ? 'disabled' : 'between_tools' };
+}
+
 function apiKey(): string {
   const key = Deno.env.get('ANTHROPIC_API_KEY');
   if (!key) throw new Error('Falta el secreto ANTHROPIC_API_KEY (supabase secrets set / --env-file).');
@@ -40,7 +50,7 @@ export async function llamarClaude(opts: LlamarClaudeOpts): Promise<string> {
       model: opts.modelo,
       max_tokens: opts.maxTokens,
       temperature: opts.temperature ?? 1,
-      thinking: { type: 'disabled' },
+      thinking: thinkingParaModelo(opts.modelo),
       system: opts.cachearSystemPrompt
         ? [{ type: 'text', text: opts.systemPrompt, cache_control: { type: 'ephemeral' } }]
         : opts.systemPrompt,
@@ -74,7 +84,7 @@ export async function llamarClaudeStream(
       model: opts.modelo,
       max_tokens: opts.maxTokens,
       temperature: opts.temperature ?? 1,
-      thinking: { type: 'disabled' },
+      thinking: thinkingParaModelo(opts.modelo),
       stream: true,
       system: opts.cachearSystemPrompt
         ? [{ type: 'text', text: opts.systemPrompt, cache_control: { type: 'ephemeral' } }]

@@ -150,4 +150,46 @@ Verificado con Playwright (Chromium + swiftshader, sin GPU real): el avatar carg
 - **Barge-in con el avatar hablando de verdad**: `stopSpeaking()` está cableado (`ReproductorAvatar.detener()`), pero no se ha podido probar interrumpiendo audio real en curso.
 - **Tamaño del bundle**: con TalkingHead + three.js + el Speech SDK, el JS de producción pasa de ~350 KB a ~430 KB gzip (más el decoder Draco, ~150 KB gzip, que ni siquiera usamos activamente). Candidato claro a `React.lazy()` / `import()` dinámico en la ruta `/llamada` y `/debug/avatar`, para no pagar ese peso en las pantallas previas (inicio, formación, briefing). No se ha hecho en esta fase para no añadir riesgo de última hora.
 - `voz` en `config/casos.json` sigue siendo el placeholder `"PENDIENTE (voz neural es-ES...)"`: hay que elegir nombres reales de voz de Azure (p. ej. `es-ES-AlvaroNeural`) antes de poder probar el TTS de verdad.
-- F4 (feedback IA + evaluación final): pendiente.
+
+## F4 — Evaluación ✅
+
+**Qué se hizo**
+
+*Hechos de referencia* (`config/hechos-referencia/*.json`, nuevo): lo que realmente pasó en cada caso y qué sería una buena comunicación (texto de `docs/CASOS.md`). Sincronizado a `supabase/functions/_shared/data/` igual que `personajes/*.json`; cargado por `_shared/hechosReferencia.ts`, usado **solo** por `evaluar-intento` — nunca llega al cliente ni al prompt del personaje.
+
+*Edge Function `evaluar-intento`* (`supabase/functions/evaluar-intento/`): prompt y esquema exactos de `docs/RUBRICA.md §5` (`claude-sonnet-5-5`), con reintento si el JSON no parsea y filtrado de ids desconocidos contra `config/checklist.json` (mismo patrón que `detectar-items`). Se extrajo `extraerJson` a `_shared/extraerJson.ts` para no duplicarlo entre las dos funciones.
+- **Bug real encontrado y corregido** (verificado contra la API real, no es una suposición): `_shared/anthropic.ts` mandaba `thinking:{type:"disabled"}` a **todos** los modelos (arreglo de F2 para `claude-haiku-5-5`). `claude-sonnet-5-5` rechaza ese valor — su mensaje de error explica que ese modelo no "piensa" salvo entre llamadas a herramientas (que aquí no usamos) y que para desactivarlo hay que mandar `{type:"between_tools"}`. No hay un valor único válido para ambos modelos; ahora `thinkingParaModelo(modelo)` decide según el nombre del modelo.
+- Confirmado también que `claude-sonnet-5-5` rechaza `temperature` igual que `haiku` (salvo el valor por defecto, 1): se dejó de pasar `temperature: 0.2` como decía `docs/RUBRICA.md` y se usa el valor por defecto de `_shared/anthropic.ts`.
+- Probado end-to-end contra la API real con una transcripción de ejemplo: evaluación de calidad real en ~12s (dentro del objetivo de `docs/SPEC.md §9`, "<20s"), citando correctamente datos de los hechos de referencia (p. ej. "1 g", "4 gramos en 24 horas") que el personaje nunca mencionó — confirma que el aislamiento hechos-de-referencia↔personaje funciona.
+
+*Cliente* (`src/motor/evaluacion/`): `llamarEvaluarIntento.ts` (timeout 25s, sin red de seguridad "ignorar y seguir" como `detectar-items` — aquí el fallo se propaga porque es el resultado que el alumno está esperando ver) y `calcularPuntuacion.ts`: la fórmula de `docs/RUBRICA.md §3` **la calcula el código, no el modelo**, a partir de `items`/`alertas` que devuelve el evaluador y los pesos ya validados de `config/checklist.json` (con test unitario).
+
+*Estado entre pantallas sin persistencia todavía* (`src/lib/progreso.ts`, nuevo): como F5 (Supabase) no está hecho, se usa `sessionStorage` (con un respaldo en memoria si no está disponible, para que sea testeable sin jsdom) para guardar el resultado de cada intento y la nota del mini-test de F1 — que antes no se guardaba en ningún sitio.
+
+*Pantallas*:
+- `LlamadaPage`: al colgar, captura duración real (con un `useRef` al inicio, no depende de `Temporizador`), la transcripción y el estado del checklist, y los pasa a `FeedbackPage` por `navigate(..., {state})` (no hay backend todavía que los guarde).
+- `FeedbackPage` (antes placeholder): llama a `evaluar-intento`, con estados de carga/error/listo; puntuación global y por ítem (coloreado), alertas, fortalezas, mejoras con frase alternativa, comparación con el intento anterior (si lo hay), valoración global, botones "Repetir (intento 2)" / "Pasar al siguiente nivel" o "Ver evaluación final" en el último nivel.
+  - **Bug real encontrado y corregido**: bucle infinito de renders (`Maximum update depth exceeded`) porque `partes` (casoId + número de intento, parseados de la URL) se recalculaba como un objeto nuevo en cada render y era dependencia de un `useEffect`; solucionado con `useMemo`.
+- `BriefingPage`: bloquea el Nivel 2 hasta que `progreso.ts` tenga un intento del Nivel 1 con la puntuación mínima de `config/casos.json` (`requisitoDesbloqueo`); probado con y sin progreso guardado.
+- `EvaluacionFinalPage` (antes placeholder): resumen de los 4 intentos agrupados por nivel, nota de formación, y descarga en PDF con `jsPDF` (`src/lib/exportarPdf.ts`) — probado de verdad con Playwright (el PDF se descarga y no está vacío).
+
+**Cómo probarlo**
+```
+npm run dev
+# /formacion -> mini-test -> Nivel 1 -> llamada (?debug=1) -> colgar -> feedback
+# "Pasar al siguiente nivel" -> Nivel 2 ya desbloqueado -> ... -> /evaluacion-final -> Descargar PDF
+npm run test    # 63 tests
+npm run build
+```
+Verificado con Playwright, interceptando solo la respuesta de `evaluar-intento` (con un JSON real de una prueba contra la API, no inventado) porque no hay Supabase local en este entorno: flujo completo de llamada → colgar → feedback con puntuación calculada correctamente (verificado a mano contra la fórmula) → "Pasar al siguiente nivel" → Nivel 2 desbloqueado sin recargar. Also probado el bloqueo de Nivel 2 sin progreso previo.
+
+**Decisiones tomadas**
+- Sin tabla `intentos`/`turnos`/`evaluaciones` en Supabase todavía (eso es F5): el estado entre pantallas vive en `sessionStorage` vía `src/lib/progreso.ts`. Se pierde al cerrar la pestaña — limitación conocida, no un error.
+- La puntuación final se calcula en el **cliente** (`calcularPuntuacion.ts`), no en la Edge Function: ya tiene cargados y validados con Zod los pesos de `config/checklist.json`, así que no hace falta duplicar esa lógica en el Edge Function ni mandar los pesos en cada petición.
+- "Repetir intento" navega directo a `/llamada/:casoId/2` (no vuelve a pasar por el briefing): coherente con el diagrama de flujo de `docs/SPEC.md §2`.
+- PDF con `jsPDF` (no `@react-pdf/renderer`, la otra opción que sugería `docs/SPEC.md §3.7`): más ligero y con una API más simple para un documento basado en texto como este.
+
+**Pendiente / no verificado en vivo**
+- Evaluación real con conversaciones de voz de verdad (con avatar y micrófono reales): el pipeline está verificado con una transcripción de ejemplo real contra la API, pero no con una sesión completa de voz.
+- F5 (persistencia Supabase + panel docente): pendiente — en cuanto se aborde, hay que migrar `src/lib/progreso.ts` a leer/escribir en Supabase en vez de `sessionStorage` (la interfaz pública del módulo puede quedarse igual).
+- El bundle de producción sigue creciendo (ahora con `jspdf`, que trae `html2canvas` de transitiva aunque no la usamos para nada: nuestro PDF es solo texto). Sigue pendiente el `code-splitting` ya anotado en F3.

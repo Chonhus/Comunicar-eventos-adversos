@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { casosConfig, obtenerCaso } from '@/lib/config';
 import { useLlamada } from '@/features/llamada/useLlamada';
@@ -9,6 +9,7 @@ import ChecklistPanel from '@/features/llamada/ChecklistPanel';
 import ModoTextoDebug from '@/features/llamada/ModoTextoDebug';
 import WebcamLocal from '@/features/llamada/WebcamLocal';
 import TranscripcionPlegable from '@/features/llamada/TranscripcionPlegable';
+import type { DatosLlamadaParaFeedback } from '@/motor/evaluacion/tipos';
 
 export default function LlamadaPage() {
   const { casoId, intento } = useParams<{ casoId: string; intento: string }>();
@@ -20,6 +21,7 @@ export default function LlamadaPage() {
   const [silenciado, setSilenciado] = useState(false);
   const [webcamActiva, setWebcamActiva] = useState(true);
   const [confirmandoColgar, setConfirmandoColgar] = useState(false);
+  const inicioRef = useRef(Date.now());
 
   const {
     estado,
@@ -35,7 +37,21 @@ export default function LlamadaPage() {
   } = useLlamada(caso, debug);
 
   function colgar() {
-    navigate(`/feedback/${caso.id}-${intento}`);
+    const checklist = obtenerChecklist();
+    const datos: DatosLlamadaParaFeedback = {
+      casoId: caso.id,
+      intento: Number(intento ?? '1'),
+      turnos,
+      checklistDetector: {
+        cumplidos: checklist
+          .obtenerItems()
+          .filter((i) => i.calidad !== 'pendiente')
+          .map((i) => ({ id: i.id, calidad: i.calidad as 'parcial' | 'completo', evidencia: i.evidencia })),
+        alertas: checklist.obtenerAlertas(),
+      },
+      duracionSeg: Math.round((Date.now() - inicioRef.current) / 1000),
+    };
+    navigate(`/feedback/${caso.id}-${intento}`, { state: datos });
   }
 
   function alternarMicro() {

@@ -4,6 +4,7 @@ import { bloques } from '@/features/formacion/contenido';
 import TarjetaBloque from '@/features/formacion/TarjetaBloque';
 import MiniTest from '@/features/formacion/MiniTest';
 import { obtenerCasoPorNivel } from '@/lib/config';
+import { guardarNotaFormacion } from '@/lib/progreso';
 
 type Fase = { tipo: 'bloque'; indice: number } | { tipo: 'test' } | { tipo: 'resultado'; nota: number };
 
@@ -60,7 +61,12 @@ export default function FormacionPage() {
         )}
 
         {fase.tipo === 'test' && (
-          <MiniTest onFinalizar={(nota) => setFase({ tipo: 'resultado', nota })} />
+          <MiniTest
+            onFinalizar={(nota) => {
+              guardarNotaFormacion(nota);
+              setFase({ tipo: 'resultado', nota });
+            }}
+          />
         )}
 
         {fase.tipo === 'resultado' && (

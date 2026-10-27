@@ -5,6 +5,7 @@ import { corsHeaders, respuestaError, respuestaOpciones } from '../_shared/cors.
 import { cargarCaso } from '../_shared/casos.ts';
 import { cargarChecklist } from '../_shared/checklist.ts';
 import { llamarClaude } from '../_shared/anthropic.ts';
+import { extraerJson } from '../_shared/extraerJson.ts';
 
 const MODELO_DETECTOR = Deno.env.get('CLAUDE_MODELO_DETECTOR') ?? 'claude-haiku-5-5';
 const MAX_TOKENS = 300;
@@ -56,11 +57,6 @@ function esPeticionValida(v: unknown): v is PeticionDetectar {
     Array.isArray(o.pendientes) &&
     Array.isArray(o.contexto)
   );
-}
-
-function extraerJson(texto: string): unknown {
-  const limpio = texto.trim().replace(/^```(json)?/i, '').replace(/```$/, '').trim();
-  return JSON.parse(limpio);
 }
 
 Deno.serve(async (req) => {

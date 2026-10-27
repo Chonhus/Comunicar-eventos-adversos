@@ -24,3 +24,9 @@ copiarJson('config/checklist.json');
 mkdirSync(path.join(destino, 'personajes'), { recursive: true });
 cpSync(path.join(raiz, 'config/personajes'), path.join(destino, 'personajes'), { recursive: true });
 console.log('✓ config/personajes/ -> supabase/functions/_shared/data/personajes/');
+
+// Hechos de referencia del evaluador (docs/CASOS.md): nunca se envían al cliente ni
+// al personaje, solo los lee la Edge Function evaluar-intento.
+mkdirSync(path.join(destino, 'hechos-referencia'), { recursive: true });
+cpSync(path.join(raiz, 'config/hechos-referencia'), path.join(destino, 'hechos-referencia'), { recursive: true });
+console.log('✓ config/hechos-referencia/ -> supabase/functions/_shared/data/hechos-referencia/');
