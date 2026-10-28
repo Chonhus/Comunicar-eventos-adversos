@@ -11,7 +11,12 @@ import { llamarClaude } from '../_shared/anthropic.ts';
 import { extraerJson } from '../_shared/extraerJson.ts';
 
 const MODELO_EVALUADOR = Deno.env.get('CLAUDE_MODELO_EVALUADOR') ?? 'claude-sonnet-5-5';
-const MAX_TOKENS = 2000;
+// docs/RUBRICA.md sugería 2000, pero con una conversación real (muchos más turnos
+// que la transcripción corta usada para probarlo) el JSON completo — 7 ítems +
+// alertas + fortalezas + mejoras + comparación + resumen, todo con texto — puede
+// superarlo y cortarse a mitad, lo que rompe el parseo (bug real visto en
+// producción: "El evaluador no devolvió JSON válido" / HTTP 502). Con más margen.
+const MAX_TOKENS = 4000;
 
 const SYSTEM_PROMPT = `Eres un docente experto en seguridad del paciente y en comunicación abierta de eventos adversos (open disclosure), con experiencia en formación de residentes en España.
 Evalúas la transcripción de una simulación en la que un ALUMNO comunica un evento adverso a un AVATAR (paciente o familiar).
@@ -241,7 +246,11 @@ Deno.serve(async (req) => {
       });
       resultado = validarYFiltrar(extraerJson(crudo), body);
     } catch {
-      return respuestaError('El evaluador no devolvió JSON válido', 502);
+      // Se incluye el final de la respuesta cruda (no todo, por si es muy larga):
+      // si vuelve a pasar, dice si se cortó a mitad (JSON incompleto) o el modelo
+      // devolvió otra cosa — mucho más útil para depurar que un mensaje genérico.
+      const final = crudo.length > 300 ? `…${crudo.slice(-300)}` : crudo;
+      return respuestaError(`El evaluador no devolvió JSON válido. Final de la respuesta: ${final}`, 502);
     }
   }
 

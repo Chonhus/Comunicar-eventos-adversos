@@ -14,7 +14,7 @@ describe('config/*.json', () => {
 
   it('carga y valida motor.json', () => {
     expect(motorConfig.motor).toBe('propio');
-    expect(motorConfig.turnos.silencioFinTurnoMs).toBe(800);
+    expect(motorConfig.turnos.silencioFinTurnoMs).toBe(1200);
   });
 
   it('obtenerCaso devuelve el caso por id', () => {

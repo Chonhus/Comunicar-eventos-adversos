@@ -16,7 +16,7 @@
     ]
   },
   "turnos": {
-    "silencioFinTurnoMs": 800,
+    "silencioFinTurnoMs": 1200,
     "bargeInMinMs": 400,
     "bargeInMinPalabras": 2,
     "silencioIncomodoMs": 12000
