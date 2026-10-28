@@ -1,6 +1,7 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { casosConfig, obtenerCaso, obtenerCasoPorNivel } from '@/lib/config';
 import { obtenerResultadosDeCaso } from '@/lib/progreso';
+import { desbloquearVozNavegador } from '@/motor/tts/NavegadorTTS';
 
 export default function BriefingPage() {
   const { casoId } = useParams<{ casoId: string }>();
@@ -40,6 +41,7 @@ export default function BriefingPage() {
       <p className="text-slate-700">Objetivo: comunica el evento adverso con claridad y empatía.</p>
       <Link
         to={`/llamada/${caso.id}/1${debug ? '?debug=1' : ''}`}
+        onClick={desbloquearVozNavegador}
         className="mt-4 w-fit rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
       >
         Iniciar llamada

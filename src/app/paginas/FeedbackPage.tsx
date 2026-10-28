@@ -7,6 +7,7 @@ import { calcularPuntuacion } from '@/motor/evaluacion/calcularPuntuacion';
 import type { DatosLlamadaParaFeedback, EvaluacionIntento } from '@/motor/evaluacion/tipos';
 import { guardarResultadoIntento, obtenerUltimoResultado } from '@/lib/progreso';
 import { guardarEvaluacion } from '@/lib/persistencia';
+import { desbloquearVozNavegador } from '@/motor/tts/NavegadorTTS';
 
 type Estado = { tipo: 'cargando' } | { tipo: 'error'; mensaje: string } | { tipo: 'listo'; evaluacion: EvaluacionIntento; puntuacion: number };
 
@@ -230,7 +231,10 @@ export default function FeedbackPage() {
         {puedeRepetir && (
           <button
             type="button"
-            onClick={() => navigate(`/llamada/${caso.id}/${partes.intento + 1}`)}
+            onClick={() => {
+              desbloquearVozNavegador();
+              navigate(`/llamada/${caso.id}/${partes.intento + 1}`);
+            }}
             className="rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-slate-900 ring-1 ring-slate-300 hover:bg-slate-50"
           >
             Repetir (intento {partes.intento + 1})
