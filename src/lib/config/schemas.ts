@@ -21,6 +21,13 @@ const AvatarCasoSchema = z.object({
   body: z.enum(['M', 'F']),
 });
 
+const BriefingSchema = z.object({
+  // Qué ha pasado, qué sabe el paciente/familiar, a quién va a hablar (docs/SPEC.md §3.4):
+  // sin esto el alumno no tiene datos clínicos reales que explicar en la llamada.
+  contexto: z.array(z.string()).min(1),
+  objetivo: z.string(),
+});
+
 export const CasoSchema = z.object({
   id: z.string(),
   nivel: z.number().int().positive(),
@@ -28,7 +35,7 @@ export const CasoSchema = z.object({
   dificultad: z.enum(['sencillo', 'dificil']),
   avatar: AvatarCasoSchema,
   mostrarItemsEnBriefing: z.boolean(),
-  briefingRef: z.string(),
+  briefing: BriefingSchema,
   hechosReferenciaRef: z.string(),
   voz: z.string(),
   modeloPersonaje: z.string(),

@@ -1,5 +1,5 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { casosConfig, obtenerCaso, obtenerCasoPorNivel } from '@/lib/config';
+import { casosConfig, checklistConfig, obtenerCaso, obtenerCasoPorNivel } from '@/lib/config';
 import { obtenerResultadosDeCaso } from '@/lib/progreso';
 import { desbloquearVozNavegador } from '@/motor/tts/NavegadorTTS';
 
@@ -35,10 +35,29 @@ export default function BriefingPage() {
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 py-16">
       <p className="text-sm font-medium text-slate-500">Nivel {caso.nivel} · {caso.dificultad}</p>
       <h1 className="text-xl font-semibold">{caso.titulo}</h1>
+
+      <section className="flex flex-col gap-2 rounded-lg bg-slate-50 p-4">
+        {caso.briefing.contexto.map((parrafo, i) => (
+          <p key={i} className="text-slate-700">{parrafo}</p>
+        ))}
+      </section>
+
       <p className="text-slate-700">
         Vas a hablar con <strong>{caso.avatar.nombre}</strong> ({caso.avatar.rol}, {caso.avatar.edad} años).
       </p>
-      <p className="text-slate-700">Objetivo: comunica el evento adverso con claridad y empatía.</p>
+      <p className="font-medium text-slate-900">Tu objetivo: {caso.briefing.objetivo}</p>
+
+      {caso.mostrarItemsEnBriefing && (
+        <section>
+          <p className="text-sm font-medium text-slate-500">Recuerda, durante la llamada:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+            {checklistConfig.items.filter((i) => i.activo).map((i) => (
+              <li key={i.id}>{i.etiqueta}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <Link
         to={`/llamada/${caso.id}/1${debug ? '?debug=1' : ''}`}
         onClick={desbloquearVozNavegador}
