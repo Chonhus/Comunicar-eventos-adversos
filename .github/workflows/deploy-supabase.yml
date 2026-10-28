@@ -1,0 +1,51 @@
+# Despliega el backend (migraciones + Edge Functions) al proyecto real de Supabase,
+# sin instalar nada en local: todo corre en los runners de GitHub Actions, igual que
+# deploy-pages.yml hace con el frontend.
+#
+# Secrets que hacen falta en Settings > Secrets and variables > Actions:
+#   SUPABASE_ACCESS_TOKEN  (Supabase: perfil (arriba a la derecha) > Access Tokens >
+#                           Generate new token)
+#   SUPABASE_DB_PASSWORD   (la contraseña de la base de datos del proyecto; si no la
+#                           tienes, se puede resetear en Project Settings > Database)
+#   SUPABASE_PROJECT_REF   (Project Settings > General > "Reference ID")
+#
+# `supabase db push` aplica las migraciones (supabase/migrations/). El grupo de
+# prueba de supabase/seed.sql NO se aplica aquí (seed.sql solo corre con
+# `db reset`, que es destructivo): esa única línea se pega a mano en el SQL Editor
+# del dashboard — ver PROGRESS.md "F5".
+name: Desplegar backend en Supabase
+
+on:
+  push:
+    branches: [claude/new-session-72ysub]
+    paths:
+      - 'supabase/**'
+      - 'config/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: supabase/setup-cli@v3
+
+      - run: supabase link --project-ref "$PROJECT_REF"
+
+      - name: Aplicar migraciones
+        run: supabase db push
+
+      - name: Sincronizar config/*.json para las Edge Functions
+        run: node scripts/sync-config-edge.mjs
+
+      - name: Desplegar Edge Functions
+        run: supabase functions deploy --project-ref "$PROJECT_REF"
