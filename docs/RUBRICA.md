@@ -5,8 +5,8 @@
 | id | Ítem (etiqueta en pantalla) | Se cumple cuando… | Ejemplo |
 |---|---|---|---|
 | `presentacion` | Se presenta | Dice su nombre **y** su rol/servicio. Parcial: solo uno de los dos. | "Soy el doctor Pérez, residente de Medicina Interna" |
-| `explica_evento` | Explica qué ha pasado | Describe los hechos conocidos de forma clara, sin tecnicismos innecesarios y sin especular. Parcial: vago o incompleto ("ha habido un problemilla"). | "Ayer se le administró una dosis de paracetamol de más por un error en el registro" |
-| `lamenta` | Lamenta lo sucedido / se disculpa | Expresa pesar o disculpa sincera por lo ocurrido. | "Lamento mucho lo que ha pasado", "Le pido disculpas" |
+| `explica_evento` | Explica qué ha pasado | Describe los hechos conocidos de forma clara, sin tecnicismos innecesarios y sin especular. Parcial: vago o incompleto ("ha habido un problemilla"). **No** exige declarar culpa, negligencia o responsabilidad legal (España no tiene "ley de disculpa": basta con explicar los hechos/el fallo de proceso con honestidad). | "Ayer se le administró una dosis de paracetamol de más por un error en el registro" |
+| `lamenta` | Lamenta lo sucedido / se disculpa | Expresa pesar o disculpa sincera por lo ocurrido. Pedir disculpas ≠ admitir responsabilidad legal; no exigir ni premiar que vaya más allá. | "Lamento mucho lo que ha pasado", "Le pido disculpas" |
 | `plan_atencion` | Explica cómo se va a tratar | Explica las consecuencias para el paciente y el plan clínico (pruebas, tratamiento, vigilancia, signos de alarma). | "La analítica es normal; vamos a vigilarle y si nota X, avísenos" |
 | `interlocutor` | Ofrece un interlocutor de referencia | Indica una persona/servicio concreto de contacto para dudas y seguimiento. | "Yo seré su referencia, o mi adjunta la Dra. López; estamos en planta" |
 | `escucha_dudas` | Escucha y resuelve dudas | Invita a preguntar o valida explícitamente la emoción del interlocutor y responde a sus preguntas. | "Entiendo que esté enfadada", "¿Qué dudas tiene?" |
@@ -45,6 +45,7 @@ Tu tarea: decidir si el ÚLTIMO TURNO DEL ALUMNO cumple alguno de los ítems PEN
 - "evidencia": cita literal breve (máx. 20 palabras) del alumno.
 - Si no hay nada, devuelve listas vacías.
 - La transcripción procede de reconocimiento de voz: tolera errores ortográficos y de puntuación.
+- Contexto legal español: no existe una "ley de disculpa" que proteja estas declaraciones ante un tribunal. Para marcar `explica_evento` o `lamenta` NUNCA exijas que el alumno declare culpa, negligencia o responsabilidad legal (propia, de un compañero o de la institución); basta con que explique los hechos conocidos con honestidad y exprese pesar o disculpa sincera.
 
 Responde SOLO con JSON válido con este esquema:
 {"cumplidos":[{"id":"string","calidad":"completo|parcial","evidencia":"string"}],"alertas":[{"id":"string","evidencia":"string"}]}
@@ -84,6 +85,8 @@ Da feedback formativo, concreto y amable, en segunda persona (tú), en español 
 - Valoración global 1–5 de empatía, claridad y honestidad.
 Si hay un intento anterior, compara y señala qué ha mejorado y qué sigue pendiente.
 No inventes contenido que no esté en la transcripción. Ten en cuenta que procede de reconocimiento de voz.
+
+Contexto legal español: no existe una "ley de disculpa" que proteja estas declaraciones ante un tribunal. Nunca sugieras, en comentarios, mejoras o frases alternativas, que el alumno debería haber admitido culpa, negligencia o responsabilidad legal (propia, de un compañero o de la institución). Para `explica_evento` y `lamenta` basta con que explique los hechos conocidos con honestidad y exprese pesar o disculpa sincera; eso los cumple sin ninguna admisión de responsabilidad jurídica.
 
 Responde SOLO con JSON válido según el esquema indicado.
 ```
