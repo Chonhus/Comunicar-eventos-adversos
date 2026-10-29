@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { crearMotor } from '@/motor';
 import type { Caso, Emocion } from '@/lib/config/schemas';
-import type { EstadoMotor } from '@/motor';
+import type { EstadoMotor, MetricasEvento } from '@/motor';
 import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
 import { crearIntento, guardarEventoChecklist, guardarTurno } from '@/lib/persistencia';
 import type { ChecklistEngine, ResultadoDeteccion } from './ChecklistEngine';
@@ -20,6 +20,10 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
   const [turnos, setTurnos] = useState<TurnoVisible[]>([]);
   const [checklistVersion, setChecklistVersion] = useState(0);
   const [errorMensaje, setErrorMensaje] = useState<string | null>(null);
+  // docs/CLAUDE.md: "Latencia... Medir y mostrar tiempos en modo debug". Solo se usa
+  // si debug=true (ver LlamadaPage), pero se escucha siempre: es barato y mantiene un
+  // único sitio donde se cablea el evento 'metricas' del motor.
+  const [metricas, setMetricas] = useState<MetricasEvento | null>(null);
   // F5: si el alumno entró con código de grupo, se persiste en Supabase (docs/SPEC.md
   // §5); si no (p. ej. ?debug=1 suelto, sin pasar por /acceso), la llamada funciona
   // igual que en F2-F4, solo que sin guardar nada.
@@ -78,6 +82,7 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
       if (intentoIdRef.current) void guardarTurno(intentoIdRef.current, { rol: 'alumno', texto: t.texto });
     };
     const onParcial = (t: string) => setTranscripcionParcial(t);
+    const onMetricas = (m: MetricasEvento) => setMetricas(m);
     const onChecklist = (resultado: ResultadoDeteccion) => {
       setChecklistVersion((v) => v + 1);
       const id = intentoIdRef.current;
@@ -96,6 +101,7 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
     motor.on('turnoAlumno', onTurnoAlumno);
     motor.on('transcripcionParcial', onParcial);
     motor.on('checklistActualizado', onChecklist);
+    motor.on('metricas', onMetricas);
 
     motor.iniciar(caso).catch((e: Error) => {
       setErrorMensaje(e.message);
@@ -110,6 +116,7 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
       motor.off('turnoAlumno', onTurnoAlumno);
       motor.off('transcripcionParcial', onParcial);
       motor.off('checklistActualizado', onChecklist);
+      motor.off('metricas', onMetricas);
       void motor.detener();
     };
     // Un único motor por montaje de la pantalla de llamada (caso e idDebug no cambian en caliente).
@@ -132,6 +139,7 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
     checklistVersion,
     errorMensaje,
     intentoId,
+    metricas,
     enviarTexto,
     silenciarMicro,
     obtenerChecklist,

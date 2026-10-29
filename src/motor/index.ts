@@ -9,4 +9,4 @@ export function crearMotor(forzarTexto: boolean): MotorConversacion {
   return new MotorPropio(motorConfig);
 }
 
-export type { EstadoMotor, EventosMotor, MotorConversacion, TurnoHistorial } from './tipos';
+export type { EstadoMotor, EventosMotor, MetricasEvento, MotorConversacion, TurnoHistorial } from './tipos';

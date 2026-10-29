@@ -29,6 +29,12 @@ export abstract class MotorBase implements MotorConversacion {
   private reproduciendo = false;
   private abortConversar: AbortController | null = null;
   private timeoutApertura: ReturnType<typeof setTimeout> | null = null;
+  // Para medir primerAudioMs (docs/CLAUDE.md: "Medir y mostrar tiempos en modo debug",
+  // objetivo < 2 s): antes se emitía siempre null, porque el evento 'metricas' salía
+  // justo al terminar el stream de texto, antes incluso de que procesarColaSiLibre()
+  // llegara a reproducir la primera frase. Ahora se mide de verdad con el callback
+  // onInicio de la primera frase de cada respuesta (ver procesarColaSiLibre/emitirPrimerAudio).
+  private metricasActuales: { t0: number; primerTokenMs: number | null } | null = null;
 
   constructor(protected readonly config: MotorConfig) {
     this.checklist = new ChecklistEngine(checklistConfig.items.map((i) => i.id));
@@ -133,8 +139,8 @@ export abstract class MotorBase implements MotorConversacion {
     const fraseBuffer = new FraseBuffer((frase) => this.encolarFrase(frase));
     this.abortConversar = new AbortController();
 
-    const t0 = performance.now();
-    let primerTokenMs: number | null = null;
+    const metricas = { t0: performance.now(), primerTokenMs: null as number | null };
+    this.metricasActuales = metricas;
     let textoCompleto = '';
     let emocionEmitida = false;
 
@@ -145,7 +151,7 @@ export abstract class MotorBase implements MotorConversacion {
         turnoAlumno,
         signal: this.abortConversar.signal,
         onDelta: (delta) => {
-          if (primerTokenMs === null) primerTokenMs = Math.round(performance.now() - t0);
+          if (metricas.primerTokenMs === null) metricas.primerTokenMs = Math.round(performance.now() - metricas.t0);
           const { emocion, texto } = extractor.procesar(delta);
           if (emocion && !emocionEmitida) {
             this.emisor.emit('emocion', emocion);
@@ -164,7 +170,6 @@ export abstract class MotorBase implements MotorConversacion {
         this.historial.push({ rol: 'avatar', texto: textoCompleto });
       }
       this.colaFrases.push(null); // marca de fin de stream
-      this.emisor.emit('metricas', { sttMs: null, primerTokenMs, primerAudioMs: null });
       this.procesarColaSiLibre();
     } catch (e) {
       if ((e as Error).name === 'AbortError') return; // barge-in: ya gestionado por interrumpir()
@@ -202,13 +207,23 @@ export abstract class MotorBase implements MotorConversacion {
       this.emisor.emit('estado', 'hablando');
     }
 
+    const metricas = this.metricasActuales;
     this.tts
-      .hablar(siguiente, this.caso.voz)
+      .hablar(siguiente, this.caso.voz, metricas ? { onInicio: () => this.emitirPrimerAudio(metricas) } : undefined)
       .catch((e) => console.error('[tts] error reproduciendo frase:', e))
       .finally(() => {
         this.reproduciendo = false;
         this.procesarColaSiLibre();
       });
+  }
+
+  /** Solo mide la primera frase de cada respuesta: metricasActuales se pone a null
+   * aquí mismo para que las frases siguientes no vuelvan a disparar el callback. */
+  private emitirPrimerAudio(metricas: { t0: number; primerTokenMs: number | null }): void {
+    if (this.metricasActuales !== metricas) return; // ya es de otra respuesta (p.ej. tras interrumpir)
+    this.metricasActuales = null;
+    const primerAudioMs = Math.round(performance.now() - metricas.t0);
+    this.emisor.emit('metricas', { sttMs: null, primerTokenMs: metricas.primerTokenMs, primerAudioMs });
   }
 
   protected reiniciarParaNuevaLlamada(caso: Caso): void {
@@ -218,5 +233,6 @@ export abstract class MotorBase implements MotorConversacion {
     this.maquina.reset();
     this.colaFrases = [];
     this.reproduciendo = false;
+    this.metricasActuales = null;
   }
 }

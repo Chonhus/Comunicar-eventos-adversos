@@ -33,6 +33,7 @@ export default function LlamadaPage() {
     checklistVersion,
     errorMensaje,
     intentoId,
+    metricas,
     enviarTexto,
     silenciarMicro,
     obtenerChecklist,
@@ -73,6 +74,15 @@ export default function LlamadaPage() {
           <WebcamLocal activa={webcamActiva} />
           <TranscripcionPlegable turnos={turnos} />
           <Subtitulos textoAvatar={subtitulo} transcripcionParcial={debug ? '' : transcripcionParcial} />
+
+          {debug && metricas && (
+            // docs/CLAUDE.md: "Latencia... < 2 s. Medir y mostrar tiempos en modo debug."
+            // top-12, no top-4: ahí ya está el badge de estado (Escuchando/Hablando…)
+            // que pinta AvatarTalkingHead, en el mismo contenedor relativo.
+            <div className="pointer-events-none absolute left-4 top-12 rounded-lg bg-black/60 px-2.5 py-1.5 font-mono text-[11px] text-white/80">
+              primer token: {metricas.primerTokenMs ?? '—'} ms · primer audio: {metricas.primerAudioMs ?? '—'} ms
+            </div>
+          )}
 
           {errorMensaje && (
             <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center px-4">
