@@ -15,6 +15,8 @@ export class WebSpeechSTT implements ProveedorSTT {
   private silenciado = false;
   // Texto del resultado interino más reciente desde el último "final" (ver onend).
   private ultimoParcial = '';
+  // Guardado en iniciar() para poder rearrancar el motor al desilenciar (ver silenciar()).
+  private ctor: NonNullable<typeof window.SpeechRecognition> | null = null;
 
   constructor(private readonly idioma = 'es-ES') {}
 
@@ -28,6 +30,7 @@ export class WebSpeechSTT implements ProveedorSTT {
       this.emisor.emit('error', 'Este navegador no soporta reconocimiento de voz (usa Chrome o Edge).');
       return;
     }
+    this.ctor = Ctor;
     this.activo = true;
     this.arrancar(Ctor);
   }
@@ -94,11 +97,30 @@ export class WebSpeechSTT implements ProveedorSTT {
 
   detener(): void {
     this.activo = false;
-    this.reconocimiento?.stop();
+    // abort() en vez de stop(): no esperamos a que procese el audio pendiente ni nos
+    // interesa su resultado final (la llamada ha terminado), así que corta de forma
+    // inmediata — libera antes el micrófono (el indicador de grabación del navegador).
+    this.reconocimiento?.abort();
     this.reconocimiento = null;
   }
 
   silenciar(silenciado: boolean): void {
+    if (this.silenciado === silenciado) return;
     this.silenciado = silenciado;
+
+    if (silenciado) {
+      // Antes solo se ignoraban los resultados (this.silenciado en onresult): el motor
+      // de reconocimiento seguía corriendo por detrás, así que el indicador de
+      // "micrófono en uso" del navegador seguía encendido aunque el alumno hubiera
+      // silenciado — bug real reportado ("se queda encendido"). Ahora se para del
+      // todo y se arranca de nuevo al desilenciar.
+      this.activo = false;
+      this.ultimoParcial = ''; // no dar por "final" una frase a medias solo por silenciar
+      this.reconocimiento?.abort();
+      this.reconocimiento = null;
+    } else if (this.ctor) {
+      this.activo = true;
+      this.arrancar(this.ctor);
+    }
   }
 }
