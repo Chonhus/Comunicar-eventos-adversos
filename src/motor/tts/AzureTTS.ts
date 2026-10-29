@@ -36,6 +36,30 @@ export class AzureTTS implements ProveedorTTS {
     if (!cred) throw new Error('Azure TTS no disponible (sin token: AZURE_SPEECH_KEY no configurada).');
     if (opts.señal?.aborted) return;
 
+    try {
+      await this.sintetizarYReproducir(frase, voz, cred, opts);
+    } catch (e) {
+      if (opts.señal?.aborted) return; // interrumpido (barge-in), no un fallo real
+      // Un fallo puntual sintetizando (p.ej. el nivel gratuito de Azure rechazando una
+      // petición bajo ráfagas de frases seguidas) se veía igual que "Azure no
+      // funciona": a esa frase le tocaba la voz de respaldo del navegador aunque el
+      // resto de la conversación sonara con Azure — bug real reportado ("a veces
+      // también habla con la voz del sintetizador, aunque normalmente es la nueva").
+      // Un reintento (con una síntesis nueva: el SpeechSynthesizer no es reutilizable
+      // tras un error) basta para el caso típico antes de caer al respaldo de verdad.
+      console.warn('[tts] Azure falló sintetizando, reintentando una vez:', e);
+      await new Promise((r) => setTimeout(r, 300));
+      if (opts.señal?.aborted) return;
+      await this.sintetizarYReproducir(frase, voz, cred, opts);
+    }
+  }
+
+  private async sintetizarYReproducir(
+    frase: string,
+    voz: string,
+    cred: { token: string; region: string },
+    opts: ReproducirOpts,
+  ): Promise<void> {
     const speechConfig = SpeechConfig.fromAuthorizationToken(cred.token, cred.region);
     speechConfig.speechSynthesisVoiceName = voz;
     speechConfig.speechSynthesisOutputFormat = SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
