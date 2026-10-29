@@ -40,7 +40,7 @@
         "objetivo": "Comunicarle el evento adverso de forma honesta y clara."
       },
       "hechosReferenciaRef": "docs/CASOS.md#hechos-n1",
-      "voz": "PENDIENTE (voz neural es-ES masculina, mayor)",
+      "voz": "es-ES-ArnauNeural",
       "modeloPersonaje": "claude-haiku-5-5",
       "emocionInicial": "neutral",
       "fraseApertura": "Hola, buenas… ¿viene a verme a mí?",
@@ -79,7 +79,7 @@
         "objetivo": "Comunicar el evento adverso a la hija, gestionando su emoción, de forma honesta y sin culpabilizar."
       },
       "hechosReferenciaRef": "docs/CASOS.md#hechos-n2",
-      "voz": "PENDIENTE (voz neural es-ES femenina, ~50 años)",
+      "voz": "es-ES-LaiaNeural",
       "modeloPersonaje": "claude-haiku-5-5",
       "emocionInicial": "enfadado",
       "fraseApertura": "¿Me va a explicar alguien qué ha pasado con mi madre?",
