@@ -25,10 +25,23 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
   // igual que en F2-F4, solo que sin guardar nada.
   const [intentoId, setIntentoId] = useState<string | null>(null);
   const intentoIdRef = useRef<string | null>(null);
+  // Silencio pedido por el alumno (botón 🔇), aparte del silencio automático al pasar
+  // la pestaña/app a segundo plano (ver más abajo) — se combinan en aplicarSilencio(),
+  // para que volver de segundo plano no desaga un silencio que el alumno sí pidió.
+  const silenciadoManualRef = useRef(false);
 
   useEffect(() => {
     const motor = motorRef.current;
     const alumno = obtenerAlumnoLocal();
+
+    // El micrófono no se corta solo al minimizar: dependíamos de que el propio
+    // navegador/sistema operativo pausara la captura en segundo plano, que es lo
+    // habitual pero no algo que controlemos ni esté garantizado (varía por
+    // navegador/versión). Con algo tan sensible como "¿me está escuchando?" no basta
+    // con confiar en eso: se silencia explícitamente en cuanto la pestaña deja de
+    // estar visible, y se restaura el estado que tuviera el alumno al volver.
+    const aplicarSilencio = () => motor.silenciarMicro(silenciadoManualRef.current || document.hidden);
+    document.addEventListener('visibilitychange', aplicarSilencio);
 
     if (alumno) {
       crearIntento(alumno.id, caso.id, numeroIntento).then((id) => {
@@ -90,6 +103,7 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
     });
 
     return () => {
+      document.removeEventListener('visibilitychange', aplicarSilencio);
       motor.off('estado', onEstado);
       motor.off('emocion', onEmocion);
       motor.off('textoAvatar', onTextoAvatar);
@@ -103,7 +117,10 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
   }, []);
 
   const enviarTexto = useCallback((texto: string) => motorRef.current.enviarTexto(texto), []);
-  const silenciarMicro = useCallback((s: boolean) => motorRef.current.silenciarMicro(s), []);
+  const silenciarMicro = useCallback((s: boolean) => {
+    silenciadoManualRef.current = s;
+    motorRef.current.silenciarMicro(s || document.hidden);
+  }, []);
   const obtenerChecklist = useCallback((): ChecklistEngine => motorRef.current.obtenerChecklist(), []);
 
   return {
