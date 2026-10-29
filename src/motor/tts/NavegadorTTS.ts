@@ -14,10 +14,15 @@ import type { ProveedorTTS, ReproducirOpts } from './tipos';
 export function desbloquearVozNavegador(): void {
   if (!('speechSynthesis' in window)) return;
   try {
-    const u = new SpeechSynthesisUtterance('');
+    // Antes se cancelaba al momento (cancel() justo después de speak()), en el mismo
+    // tick síncrono. speak() es asíncrono por dentro: cancelar así de rápido corta la
+    // locución antes de que el motor llegue a usarla de verdad, así que en iOS Safari
+    // el "desbloqueo" no llegaba a producirse — bug real visto en producción (seguía
+    // sin sonar tras un segundo intento). Con texto no vacío y sin cancelar, se deja
+    // que la locución (silenciosa, casi instantánea) se reproduzca entera.
+    const u = new SpeechSynthesisUtterance(' ');
     u.volume = 0;
     speechSynthesis.speak(u);
-    speechSynthesis.cancel();
   } catch {
     // Mejor esfuerzo: si falla, el resto del flujo sigue igual (y puede que
     // funcione igualmente en navegadores menos estrictos que Safari).

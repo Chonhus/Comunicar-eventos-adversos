@@ -13,6 +13,8 @@ export class WebSpeechSTT implements ProveedorSTT {
   private emisor = new EmisorEventos<EventosSTT>();
   private activo = false;
   private silenciado = false;
+  // Texto del resultado interino más reciente desde el último "final" (ver onend).
+  private ultimoParcial = '';
 
   constructor(private readonly idioma = 'es-ES') {}
 
@@ -36,14 +38,18 @@ export class WebSpeechSTT implements ProveedorSTT {
     r.continuous = true;
     r.interimResults = true;
 
+    this.ultimoParcial = '';
+
     r.onresult = (ev) => {
       if (this.silenciado) return;
       for (let i = ev.resultIndex; i < ev.results.length; i++) {
         const resultado = ev.results[i];
         const transcript = resultado[0]?.transcript ?? '';
         if (resultado.isFinal) {
+          this.ultimoParcial = '';
           this.emisor.emit('final', transcript);
         } else {
+          this.ultimoParcial = transcript;
           this.emisor.emit('parcial', transcript);
         }
       }
@@ -60,11 +66,30 @@ export class WebSpeechSTT implements ProveedorSTT {
     };
 
     r.onend = () => {
+      // El navegador puede cortar la sesión a mitad de una frase sin que llegue a
+      // marcarse "final" (p. ej. tras su propio límite interno de duración). Sin esto
+      // ese trozo se perdía para siempre al reiniciar — bug real visto en producción
+      // ("a veces pierde información" al hablar un rato en el ordenador). Se trata
+      // como final antes de reiniciar la sesión.
+      if (this.ultimoParcial.trim()) {
+        const texto = this.ultimoParcial;
+        this.ultimoParcial = '';
+        this.emisor.emit('final', texto);
+      }
       if (this.activo) this.arrancar(Ctor); // el navegador cortó la sesión: reiniciamos
     };
 
     this.reconocimiento = r;
-    r.start();
+    try {
+      r.start();
+    } catch {
+      // r.start() puede lanzar de forma síncrona si el micrófono de la sesión
+      // anterior todavía no se ha liberado (visto en iOS Safari y, más raro, en
+      // Chrome de escritorio). Sin este reintento, el fallo se queda mudo: no
+      // dispara onerror ni onend, así que no se recupera solo y el alumno deja de
+      // ser escuchado hasta recargar. Un pequeño margen antes de reintentar basta.
+      if (this.activo) setTimeout(() => this.activo && this.arrancar(Ctor), 250);
+    }
   }
 
   detener(): void {
