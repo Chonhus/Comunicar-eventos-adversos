@@ -2,6 +2,19 @@
 // El parámetro `voz` identifica una voz de Azure (config/casos.json) y no tiene
 // equivalente directo en las voces del navegador: aquí solo se usa el idioma.
 import type { ProveedorTTS, ReproducirOpts } from './tipos';
+import { heuristicaVisemasEs } from '../avatar/heuristicaVisemasEs';
+import { obtenerAvatarActivo } from '../avatar/reproductorAvatar';
+
+// Velocidad media de habla en español a rate=1 (~160 palabras/min). Solo para repartir
+// los visemas del heurístico en el tiempo: no se sincroniza con el audio real (lo
+// reproduce el propio navegador, fuera de nuestro control), así que es aproximado a
+// propósito — mejor un movimiento de boca algo desajustado que ninguno.
+const PALABRAS_POR_SEGUNDO = 2.7;
+
+function estimarDuracionMs(frase: string): number {
+  const palabras = frase.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(300, (palabras / PALABRAS_POR_SEGUNDO) * 1000);
+}
 
 /**
  * Safari en iOS exige que `speechSynthesis.speak()` se llame dentro de un toque
@@ -48,6 +61,32 @@ function obtenerVoces(): Promise<SpeechSynthesisVoice[]> {
 }
 
 export class NavegadorTTS implements ProveedorTTS {
+  private audioCtx: AudioContext | null = null;
+
+  private obtenerAudioCtx(): AudioContext {
+    if (!this.audioCtx) this.audioCtx = new AudioContext();
+    return this.audioCtx;
+  }
+
+  /**
+   * Sin Azure no hay visemas reales (los da el Speech SDK junto al audio): el avatar
+   * 3D se quedaba con la boca estática mientras hablaba speechSynthesis — bug real
+   * reportado por un alumno. Se usa el heurístico texto→visema de docs/AVATARES.md §4
+   * (el mismo pensado para esto, antes sin conectar a nada) con una duración estimada,
+   * y se reproduce como un audio silencioso a través del avatar: la voz real la sigue
+   * poniendo el navegador aparte, esto solo mueve la boca en paralelo.
+   */
+  private animarAvatar(frase: string, señal?: AbortSignal): void {
+    const avatar = obtenerAvatarActivo();
+    if (!avatar) return;
+    const duracionMs = estimarDuracionMs(frase);
+    const visemas = heuristicaVisemasEs(frase, duracionMs);
+    if (visemas.length === 0) return;
+    const audioCtx = this.obtenerAudioCtx();
+    const bufferSilencioso = audioCtx.createBuffer(1, Math.ceil(audioCtx.sampleRate * (duracionMs / 1000)), audioCtx.sampleRate);
+    void avatar.hablar(bufferSilencioso, visemas, [], { señal });
+  }
+
   async hablar(frase: string, _voz: string, opts: ReproducirOpts = {}): Promise<void> {
     if (!('speechSynthesis' in window)) {
       throw new Error('Este navegador no soporta speechSynthesis.');
@@ -63,7 +102,10 @@ export class NavegadorTTS implements ProveedorTTS {
       const vozEs = voces.find((v) => v.lang === 'es-ES') ?? voces.find((v) => v.lang.startsWith('es'));
       if (vozEs) u.voice = vozEs;
 
-      u.onstart = () => opts.onInicio?.();
+      u.onstart = () => {
+        opts.onInicio?.();
+        this.animarAvatar(frase, opts.señal);
+      };
       u.onend = () => resolve();
       u.onerror = (e) => {
         if (e.error === 'canceled' || e.error === 'interrupted') resolve();
@@ -78,5 +120,6 @@ export class NavegadorTTS implements ProveedorTTS {
 
   detener(): void {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
+    obtenerAvatarActivo()?.detener();
   }
 }
