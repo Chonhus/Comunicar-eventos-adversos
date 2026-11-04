@@ -10,7 +10,7 @@ Cada caso tiene tres partes:
 ## Nivel 1 · Caso sencillo — Dosis duplicada de paracetamol sin daño
 
 ### Briefing para el alumno
-Eres residente de Medicina Interna en la planta 5.ª. Ayer por la tarde, a **Antonio Ruiz (68 años)**, ingresado por una neumonía, se le administró una **dosis extra de paracetamol 1 g** (recibió dos dosis con 1 hora de diferencia en lugar de 6 h) por un error de registro en la hoja de administración. Se ha comprobado que la dosis total de las 24 h (4 g) está dentro del límite seguro, la analítica de control hepático de esta mañana es normal y **el paciente está bien**.
+Eres residente de Medicina Interna en la planta 5.ª. Ayer por la tarde, a **Antonio Ruiz (68 años)**, ingresado por una neumonía, se le administró una **dosis extra de paracetamol 1 g**: recibió dos dosis con solo 1 hora de diferencia en lugar de las 6 h que estaban indicadas en la hoja de administración. Se ha comprobado que la dosis total de las 24 h (4 g) está dentro del límite seguro, la analítica de control hepático de esta mañana es normal y **el paciente está bien**.
 El incidente ya se ha notificado en el sistema de notificación del hospital y la supervisión de enfermería está revisando el procedimiento de registro.
 Antonio está consciente, orientado y tranquilo. Vas a su habitación a comunicárselo. No sabe nada todavía.
 
@@ -34,7 +34,8 @@ Antonio está consciente, orientado y tranquilo. Vas a su habitación a comunic�
   - Respuestas cortas (1–3 frases), conversacionales.
 
 ### Hechos de referencia (evaluador)
-- Evento: dosis extra de paracetamol 1 g por error de registro; dosis total 24 h = 4 g (límite seguro); analítica hepática normal; sin daño.
+- Evento: dosis extra de paracetamol 1 g — se administraron dos dosis con 1 hora de diferencia en lugar de las 6 h indicadas en la hoja de administración; dosis total 24 h = 4 g (límite seguro); analítica hepática normal; sin daño.
+- **Indicación legal del hospital:** no usar la palabra "error" (ni "fallo") para describir lo ocurrido, ni exigir que el alumno la use; describir los hechos de forma neutra (qué dosis se administró, cuándo, y que no coincidió con lo indicado).
 - Antecedente relevante del paciente: hígado graso (el alumno no lo sabe de antemano; si el paciente lo menciona, una buena respuesta lo integra y tranquiliza con datos).
 - Buen plan: vigilancia clínica, repetir analítica si se considera, informar de síntomas de alarma, sin cambios en el tratamiento de la neumonía.
 - Prevención: notificado; revisión del procedimiento de registro de administración.
