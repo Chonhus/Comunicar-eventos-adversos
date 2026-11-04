@@ -21,7 +21,7 @@
     { "id": "especula", "etiqueta": "Especula o promete", "penalizacion": 5,
       "definicion": "Da información no confirmada como hecho o promete resultados." },
     { "id": "minimiza", "etiqueta": "Minimiza lo ocurrido", "penalizacion": 5,
-      "definicion": "Resta importancia a lo sucedido." },
+      "definicion": "Resta importancia al EVENTO en sí o a que fue un error de proceso ('no ha sido nada', 'son cosas que pasan', 'no es para tanto'). NO cuenta como minimizar tranquilizar con datos objetivos de que no hubo daño (p. ej. una analítica normal) mientras se reconoce que el evento ocurrió: eso es buena comunicación, no minimización." },
     { "id": "defensivo", "etiqueta": "Actitud defensiva", "penalizacion": 5,
       "definicion": "Se justifica en exceso, discute con el interlocutor o desanima una reclamación." },
     { "id": "tecnicismos", "etiqueta": "Lenguaje técnico", "penalizacion": 5,

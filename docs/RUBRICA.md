@@ -20,7 +20,7 @@ Los cinco primeros son los **ítems núcleo**. `escucha_dudas` y `prevencion` so
 |---|---|---|
 | `culpabiliza` | Culpabiliza a personas | Atribuye la culpa a un profesional concreto, a otro servicio o al propio paciente/familia. |
 | `especula` | Especula o promete | Da información no confirmada, hipótesis como hechos, o promete resultados ("seguro que la operación sale bien"). |
-| `minimiza` | Minimiza lo ocurrido | Resta importancia ("no ha sido nada", "son cosas que pasan"). |
+| `minimiza` | Minimiza lo ocurrido | Resta importancia al evento en sí o a que fue un error de proceso ("no ha sido nada", "son cosas que pasan"). **No** cuenta tranquilizar con datos objetivos de que no hubo daño (p. ej. analítica normal) mientras se reconoce que el evento ocurrió. |
 | `defensivo` | Actitud defensiva | Se justifica en exceso, discute con el interlocutor o desanima una reclamación. |
 | `tecnicismos` | Lenguaje técnico | Usa jerga sin explicarla de forma repetida. |
 
