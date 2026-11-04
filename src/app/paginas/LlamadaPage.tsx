@@ -34,6 +34,7 @@ export default function LlamadaPage() {
     errorMensaje,
     intentoId,
     metricas,
+    avisoReactivarSonido,
     enviarTexto,
     silenciarMicro,
     obtenerChecklist,
@@ -84,11 +85,22 @@ export default function LlamadaPage() {
             </div>
           )}
 
-          {errorMensaje && (
-            <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center px-4">
-              <div className="pointer-events-auto max-w-md rounded-lg bg-red-600/90 px-3 py-2 text-center text-sm text-white shadow-lg">
-                {errorMensaje}
-              </div>
+          {(avisoReactivarSonido || errorMensaje) && (
+            <div className="pointer-events-none absolute inset-x-0 top-4 flex flex-col items-center gap-2 px-4">
+              {avisoReactivarSonido && (
+                // iOS suspende el audio al pasar la pestaña a segundo plano y solo lo
+                // reactiva con un toque real (ver useLlamada.ts/audioContextsActivos.ts):
+                // cualquier toque en la pantalla —incluido este aviso— lo soluciona, no
+                // hace falta que sea justo aquí.
+                <div className="pointer-events-auto max-w-md rounded-lg bg-amber-500/90 px-3 py-2 text-center text-sm font-medium text-white shadow-lg">
+                  🔊 Toca la pantalla para reactivar el sonido
+                </div>
+              )}
+              {errorMensaje && (
+                <div className="pointer-events-auto max-w-md rounded-lg bg-red-600/90 px-3 py-2 text-center text-sm text-white shadow-lg">
+                  {errorMensaje}
+                </div>
+              )}
             </div>
           )}
 

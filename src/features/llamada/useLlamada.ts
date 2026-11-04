@@ -30,6 +30,10 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
   // igual que en F2-F4, solo que sin guardar nada.
   const [intentoId, setIntentoId] = useState<string | null>(null);
   const intentoIdRef = useRef<string | null>(null);
+  // Aviso "toca para reactivar el sonido" (ver más abajo): visible mientras se espera
+  // ese primer toque tras volver de segundo plano en iOS, para no depender de que el
+  // alumno toque algo por casualidad antes de que el avatar intente volver a hablar.
+  const [avisoReactivarSonido, setAvisoReactivarSonido] = useState(false);
   // Silencio pedido por el alumno (botón 🔇), aparte del silencio automático al pasar
   // la pestaña/app a segundo plano (ver más abajo) — se combinan en aplicarSilencio(),
   // para que volver de segundo plano no desaga un silencio que el alumno sí pidió.
@@ -52,10 +56,17 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
     // toque real del usuario — resume() llamado por nuestro propio código al volver no
     // sirve de nada ahí (bug real reportado: tras minimizar, el avatar se quedaba mudo).
     // Se arma un único listener para el próximo toque cada vez que la pestaña vuelve a
-    // estar visible (ver audioContextsActivos.ts).
+    // estar visible (ver audioContextsActivos.ts), y se muestra un aviso explícito hasta
+    // que llegue ese toque — sin esto, si el alumno solo habla y no toca nada, la
+    // primera respuesta tras volver puede seguir sonando muda.
+    const onToqueReanuda = () => {
+      reanudarAudioContextsActivos();
+      setAvisoReactivarSonido(false);
+    };
     const onCambioVisibilidad = () => {
       if (!document.hidden) {
-        document.addEventListener('pointerdown', reanudarAudioContextsActivos, { once: true });
+        setAvisoReactivarSonido(true);
+        document.addEventListener('pointerdown', onToqueReanuda, { once: true });
       }
     };
     document.addEventListener('visibilitychange', onCambioVisibilidad);
@@ -124,7 +135,7 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
     return () => {
       document.removeEventListener('visibilitychange', aplicarSilencio);
       document.removeEventListener('visibilitychange', onCambioVisibilidad);
-      document.removeEventListener('pointerdown', reanudarAudioContextsActivos);
+      document.removeEventListener('pointerdown', onToqueReanuda);
       motor.off('estado', onEstado);
       motor.off('emocion', onEmocion);
       motor.off('textoAvatar', onTextoAvatar);
@@ -155,6 +166,7 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
     errorMensaje,
     intentoId,
     metricas,
+    avisoReactivarSonido,
     enviarTexto,
     silenciarMicro,
     obtenerChecklist,
