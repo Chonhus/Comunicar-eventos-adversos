@@ -11,6 +11,7 @@ import {
 } from 'microsoft-cognitiveservices-speech-sdk';
 import type { ProveedorTTS, ReproducirOpts, PalabraTiempo } from './tipos';
 import { obtenerCredencialVoz } from './obtenerCredencialVoz';
+import { registrarAudioContextActivo } from './audioContextsActivos';
 import { obtenerAvatarActivo } from '../avatar/reproductorAvatar';
 import { construirSegmentosDesdeEventosAzure, type EventoVisemaAzure } from '../avatar/construirVisemas';
 
@@ -26,7 +27,10 @@ export class AzureTTS implements ProveedorTTS {
   private fuenteActual: AudioBufferSourceNode | null = null;
 
   private obtenerAudioCtx(): AudioContext {
-    if (!this.audioCtx) this.audioCtx = new AudioContext();
+    if (!this.audioCtx) {
+      this.audioCtx = new AudioContext();
+      registrarAudioContextActivo(this.audioCtx);
+    }
     return this.audioCtx;
   }
 

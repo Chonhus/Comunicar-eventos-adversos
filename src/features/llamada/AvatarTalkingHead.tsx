@@ -9,6 +9,7 @@ import type { Emocion } from '@/lib/config/schemas';
 import { posesConfig } from '@/lib/config';
 import { emocionAMood } from '@/motor/avatar/mapaEmociones';
 import { registrarAvatarActivo, type ReproductorAvatar } from '@/motor/avatar/reproductorAvatar';
+import { registrarAudioContextActivo } from '@/motor/tts/audioContextsActivos';
 import { rutaPublica } from '@/lib/rutaPublica';
 import AvatarEstatico from './AvatarEstatico';
 
@@ -122,6 +123,10 @@ export default function AvatarTalkingHead({
       lipsyncModules: [],
     });
     headRef.current = head;
+    // Creado de forma síncrona en el constructor de TalkingHead: se registra ya, no hace
+    // falta esperar a showAvatar() — ver audioContextsActivos.ts (bug real: el avatar se
+    // quedaba mudo tras volver de segundo plano en iOS Safari).
+    registrarAudioContextActivo(head.audioCtx);
 
     head
       .showAvatar({ url: rutaPublica(caso.avatar.glb), body: caso.avatar.body })

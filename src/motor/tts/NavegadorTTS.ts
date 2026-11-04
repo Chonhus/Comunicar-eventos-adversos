@@ -4,6 +4,7 @@
 import type { ProveedorTTS, ReproducirOpts } from './tipos';
 import { heuristicaVisemasEs } from '../avatar/heuristicaVisemasEs';
 import { obtenerAvatarActivo } from '../avatar/reproductorAvatar';
+import { registrarAudioContextActivo } from './audioContextsActivos';
 
 // Velocidad media de habla en español a rate=1 (~160 palabras/min). Solo para repartir
 // los visemas del heurístico en el tiempo: no se sincroniza con el audio real (lo
@@ -64,7 +65,10 @@ export class NavegadorTTS implements ProveedorTTS {
   private audioCtx: AudioContext | null = null;
 
   private obtenerAudioCtx(): AudioContext {
-    if (!this.audioCtx) this.audioCtx = new AudioContext();
+    if (!this.audioCtx) {
+      this.audioCtx = new AudioContext();
+      registrarAudioContextActivo(this.audioCtx);
+    }
     return this.audioCtx;
   }
 

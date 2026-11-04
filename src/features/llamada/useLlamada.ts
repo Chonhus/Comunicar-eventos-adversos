@@ -4,6 +4,7 @@ import type { Caso, Emocion } from '@/lib/config/schemas';
 import type { EstadoMotor, MetricasEvento } from '@/motor';
 import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
 import { crearIntento, guardarEventoChecklist, guardarTurno } from '@/lib/persistencia';
+import { reanudarAudioContextsActivos } from '@/motor/tts/audioContextsActivos';
 import type { ChecklistEngine, ResultadoDeteccion } from './ChecklistEngine';
 
 export interface TurnoVisible {
@@ -46,6 +47,18 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
     // estar visible, y se restaura el estado que tuviera el alumno al volver.
     const aplicarSilencio = () => motor.silenciarMicro(silenciadoManualRef.current || document.hidden);
     document.addEventListener('visibilitychange', aplicarSilencio);
+
+    // iOS Safari suspende el audio al pasar a segundo plano y solo lo reactiva con un
+    // toque real del usuario — resume() llamado por nuestro propio código al volver no
+    // sirve de nada ahí (bug real reportado: tras minimizar, el avatar se quedaba mudo).
+    // Se arma un único listener para el próximo toque cada vez que la pestaña vuelve a
+    // estar visible (ver audioContextsActivos.ts).
+    const onCambioVisibilidad = () => {
+      if (!document.hidden) {
+        document.addEventListener('pointerdown', reanudarAudioContextsActivos, { once: true });
+      }
+    };
+    document.addEventListener('visibilitychange', onCambioVisibilidad);
 
     if (alumno) {
       crearIntento(alumno.id, caso.id, numeroIntento).then((id) => {
@@ -110,6 +123,8 @@ export function useLlamada(caso: Caso, debug: boolean, numeroIntento: number) {
 
     return () => {
       document.removeEventListener('visibilitychange', aplicarSilencio);
+      document.removeEventListener('visibilitychange', onCambioVisibilidad);
+      document.removeEventListener('pointerdown', reanudarAudioContextsActivos);
       motor.off('estado', onEstado);
       motor.off('emocion', onEmocion);
       motor.off('textoAvatar', onTextoAvatar);

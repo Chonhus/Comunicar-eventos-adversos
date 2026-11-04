@@ -68,6 +68,9 @@ declare module '@met4citizen/talkinghead' {
   export class TalkingHead {
     constructor(nodo: HTMLElement, opciones?: TalkingHeadOptions);
     poseTemplates: Record<string, PoseTemplate>;
+    /** Creado de forma síncrona en el constructor (initAudioGraph()). Necesario para
+     * poder reanudarlo tras un gesto real del usuario en iOS — ver audioContextsActivos.ts. */
+    audioCtx: AudioContext;
     showAvatar(
       avatar: AvatarConfig,
       onprogress?: ((ev: ProgressEvent) => void) | null,
