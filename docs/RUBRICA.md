@@ -29,7 +29,7 @@ Los cinco primeros son los **ítems núcleo**. `escucha_dudas` y `prevencion` so
 - Pesos por defecto: núcleo ×1,0; recomendados ×0,75.
 - Puntuación = (Σ puntos × peso) / (Σ máximo × peso) × 100.
 - Cada alerta resta 5 puntos (mínimo 0). Configurable.
-- Además, el evaluador da una **valoración cualitativa global** (empatía, claridad, honestidad) en escala 1–5, que se muestra pero no entra en la puntuación numérica.
+- Sin valoración cualitativa aparte (empatía/claridad/honestidad en escala 1–5): generaba confusión real con el 0-100 al no tener relación matemática entre sí, así que se quitó — una sola puntuación, con el desglose por ítem como explicación.
 
 ## 4. Prompt del detector en tiempo real (`detectar-items`, modelo rápido)
 
@@ -82,7 +82,6 @@ Identifica las alertas (conductas a evitar) con su evidencia y un comentario igu
 Da feedback formativo, concreto y amable, en segunda persona (tú), en español de España, siendo breve en todo:
 - 2 fortalezas, una frase corta cada una.
 - 2 mejoras, cada una con una FRASE ALTERNATIVA corta que el alumno podría haber dicho en ese momento.
-- Valoración global 1–5 de empatía, claridad y honestidad.
 Si hay un intento anterior, compara en una frase qué ha mejorado y qué sigue pendiente.
 Resumen general en 1–2 frases, no más.
 No inventes contenido que no esté en la transcripción. Ten en cuenta que procede de reconocimiento de voz.
@@ -113,7 +112,6 @@ TRANSCRIPCIÓN:
   "alertas": [{ "id": "culpabiliza", "evidencia": "…", "comentario": "…" }],
   "fortalezas": ["…", "…"],
   "mejoras": [{ "aspecto": "…", "frase_alternativa": "…" }],
-  "global": { "empatia": 4, "claridad": 3, "honestidad": 5 },
   "comparacion_intento_anterior": "… | null",
   "resumen": "1–2 frases"
 }

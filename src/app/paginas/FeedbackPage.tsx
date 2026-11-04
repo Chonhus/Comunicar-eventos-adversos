@@ -136,6 +136,7 @@ export default function FeedbackPage() {
       <div className="mt-6 rounded-xl bg-slate-900 p-6 text-center text-white">
         <p className="text-sm text-white/70">Puntuación</p>
         <p className="text-4xl font-bold">{puntuacion}/100</p>
+        <p className="mt-1 text-xs text-white/50">Suma de los puntos de cada ítem de abajo, menos las alertas</p>
       </div>
 
       {evaluacion.comparacion_intento_anterior && (
@@ -207,24 +208,6 @@ export default function FeedbackPage() {
             </li>
           ))}
         </ul>
-      </section>
-
-      <section className="mt-6">
-        <h2 className="font-semibold">Valoración global</h2>
-        <div className="mt-2 grid grid-cols-3 gap-3 text-center text-sm">
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-slate-500">Empatía</p>
-            <p className="text-lg font-semibold">{evaluacion.global.empatia}/5</p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-slate-500">Claridad</p>
-            <p className="text-lg font-semibold">{evaluacion.global.claridad}/5</p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-slate-500">Honestidad</p>
-            <p className="text-lg font-semibold">{evaluacion.global.honestidad}/5</p>
-          </div>
-        </div>
       </section>
 
       <div className="mt-8 flex flex-wrap gap-3">

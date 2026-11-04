@@ -16,7 +16,6 @@ const EVALUACION_VACIA: EvaluacionIntento = {
   alertas: [],
   fortalezas: [],
   mejoras: [],
-  global: { empatia: 3, claridad: 3, honestidad: 3 },
   comparacion_intento_anterior: null,
   resumen: '',
 };

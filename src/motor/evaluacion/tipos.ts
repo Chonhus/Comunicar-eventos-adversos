@@ -17,18 +17,11 @@ export interface Mejora {
   frase_alternativa: string;
 }
 
-export interface ValoracionGlobal {
-  empatia: number;
-  claridad: number;
-  honestidad: number;
-}
-
 export interface EvaluacionIntento {
   items: ItemEvaluado[];
   alertas: AlertaEvaluada[];
   fortalezas: string[];
   mejoras: Mejora[];
-  global: ValoracionGlobal;
   comparacion_intento_anterior: string | null;
   resumen: string;
 }

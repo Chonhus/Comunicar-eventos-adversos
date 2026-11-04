@@ -26,7 +26,6 @@ Identifica las alertas (conductas a evitar) con su evidencia y un comentario igu
 Da feedback formativo, concreto y amable, en segunda persona (tú), en español de España, siendo breve en todo:
 - 2 fortalezas, una frase corta cada una.
 - 2 mejoras, cada una con una FRASE ALTERNATIVA corta que el alumno podría haber dicho en ese momento.
-- Valoración global 1–5 de empatía, claridad y honestidad.
 Si hay un intento anterior, compara en una frase qué ha mejorado y qué sigue pendiente.
 Resumen general en 1–2 frases, no más.
 No inventes contenido que no esté en la transcripción. Ten en cuenta que procede de reconocimiento de voz.
@@ -34,7 +33,7 @@ No inventes contenido que no esté en la transcripción. Ten en cuenta que proce
 Contexto legal español: no existe una "ley de disculpa" que proteja estas declaraciones ante un tribunal. Nunca sugieras, en comentarios, mejoras o frases alternativas, que el alumno debería haber admitido culpa, negligencia o responsabilidad legal (propia, de un compañero o de la institución). Para los ítems \`explica_evento\` y \`lamenta\` basta con que explique los hechos conocidos con honestidad (qué ha pasado, qué ha fallado a nivel de proceso) y exprese pesar o disculpa sincera; eso los cumple sin ninguna admisión de responsabilidad jurídica. Las frases alternativas que propongas deben limitarse a eso, nunca a declaraciones de culpa.
 
 Responde SOLO con JSON válido según este esquema:
-{"items":[{"id":"string","puntuacion":0,"evidencia":"string","comentario":"string"}],"alertas":[{"id":"string","evidencia":"string","comentario":"string"}],"fortalezas":["string","string","string"],"mejoras":[{"aspecto":"string","frase_alternativa":"string"}],"global":{"empatia":1,"claridad":1,"honestidad":1},"comparacion_intento_anterior":"string o null","resumen":"string"}`;
+{"items":[{"id":"string","puntuacion":0,"evidencia":"string","comentario":"string"}],"alertas":[{"id":"string","evidencia":"string","comentario":"string"}],"fortalezas":["string","string"],"mejoras":[{"aspecto":"string","frase_alternativa":"string"}],"comparacion_intento_anterior":"string o null","resumen":"string"}`;
 
 interface TurnoEntrada {
   rol: 'alumno' | 'avatar';
@@ -179,19 +178,11 @@ function validarYFiltrar(crudo: unknown, body: PeticionEvaluar): Record<string, 
         .slice(0, 2)
     : [];
 
-  const globalCrudo = (o.global ?? {}) as Record<string, unknown>;
-  const global = {
-    empatia: enteroEntre(globalCrudo.empatia, 1, 5, 3),
-    claridad: enteroEntre(globalCrudo.claridad, 1, 5, 3),
-    honestidad: enteroEntre(globalCrudo.honestidad, 1, 5, 3),
-  };
-
   return {
     items,
     alertas,
     fortalezas,
     mejoras,
-    global,
     comparacion_intento_anterior: body.intentoAnterior
       ? typeof o.comparacion_intento_anterior === 'string'
         ? o.comparacion_intento_anterior
