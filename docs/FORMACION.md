@@ -47,14 +47,19 @@
 - Ante "**¿de quién es la culpa?**": "Ahora mismo estamos analizando qué falló para que no vuelva a pasar; le mantendremos informada".
 - Si no sabes algo: "No lo sé todavía, lo voy a averiguar y se lo diré".
 
-## Mini-test (5 preguntas, opción única)
-1. Un paciente recibe una dosis extra de un fármaco sin sufrir daño. ¿Hay que comunicárselo?
-   a) No, porque no hubo daño · **b) Sí, también se comunica** · c) Solo si pregunta
-2. Pedir disculpas al paciente…
-   a) Equivale a reconocer responsabilidad legal · **b) Es expresar pesar y es recomendable** · c) Debe evitarse
-3. Ante "¿de quién es la culpa?", lo más adecuado es…
-   a) Indicar qué profesional estaba de turno · b) Decir que fue culpa del paciente · **c) Explicar que se está analizando qué falló en el sistema**
-4. ¿Cuál NO forma parte de la estructura recomendada?
-   a) Ofrecer un interlocutor de referencia · **b) Asegurar que no volverá a pasar nunca** · c) Explicar el plan de atención
-5. Si la familia quiere poner una reclamación…
-   a) Intentar disuadirla · **b) Informar de que es su derecho y cómo hacerlo** · c) Cambiar de tema
+## Pretest/postest (5 preguntas, opción única — `preguntasPrePost` en `contenido.ts`)
+Las opciones incorrectas están pensadas para sonar plausibles, no para descartarse por simple sentido común.
+1. ¿Qué es un evento adverso? → **daño al paciente ligado a la atención, no a la evolución natural de su enfermedad** (no: cualquier empeoramiento clínico · no: solo errores de medicación).
+2. ¿Por qué tiene el paciente derecho a ser informado? → **es un derecho legal (Ley 41/2002)** (no: solo buena práctica sin obligación legal · no: solo si el daño es grave o permanente).
+3. Al comunicar un evento adverso, lo recomendable es… → **explicar los hechos con claridad y ofrecer un interlocutor** (no: esperar a la investigación completa · no: dar el máximo detalle técnico).
+4. Ante "¿de quién es la culpa?" → **analizar qué ha pasado a nivel de proceso, sin señalar a una persona** (no: decir que la identidad del responsable es confidencial · no: decir que nunca se sabrá).
+5. Pedir disculpas… → **expresa pesar, no es una admisión de responsabilidad legal** (no: reservarlo para cuando esté confirmado el error de alguien · no: evitarlo porque puede interpretarse como culpa).
+
+## Preguntas intercaladas entre vídeos (2+2, en `pasos` de `contenido.ts`)
+Tras el vídeo de Introducción:
+1. Método CANDOR → **proceso estructurado de comunicación abierta y resolución, incluye apoyo al profesional implicado** (no: estrategia de "negar y defender" · no: solo para incidentes sin daño).
+2. "Segunda víctima" → **el profesional implicado, que también necesita apoyo** (no: un segundo paciente afectado · no: el familiar que reclama).
+
+Tras el vídeo de Cómo notificar un evento adverso:
+3. Incidente sin daño al paciente → **se notifica siempre internamente, aunque no se comunique al paciente** (no: no hace falta si no hubo consecuencia clínica · no: solo si el paciente pregunta).
+4. Si la familia quiere reclamar → **informar de que es su derecho y cómo hacerlo** (no: intentar disuadirla porque no cambiará nada · no: decirle que espere a la investigación).

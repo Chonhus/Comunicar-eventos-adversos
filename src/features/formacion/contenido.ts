@@ -6,50 +6,53 @@ import type { PasoFormacion, PreguntaTest } from './tipos';
 // Mismas 5 preguntas antes (pretest, nada más pasar el consentimiento) y después
 // (postest, al llegar a la evaluación final del Nivel 2) — diseño pre/post clásico
 // para medir la mejora real, no solo si se acertó al final.
+// Las opciones incorrectas están pensadas para sonar plausibles (no absurdas), de
+// forma que acertar requiera haber visto los vídeos y no solo el sentido común
+// (reportado por un alumno: "se contestan solo con sentido común").
 export const preguntasPrePost: PreguntaTest[] = [
   {
     id: 1,
     enunciado: '¿Qué es un evento adverso?',
     opciones: [
-      { texto: 'Un daño al paciente relacionado con la atención sanitaria, no con su enfermedad de base', correcta: true },
-      { texto: 'Cualquier empeoramiento del paciente, sea cual sea la causa', correcta: false },
-      { texto: 'Solo el daño causado de forma intencionada', correcta: false },
+      { texto: 'Un daño al paciente relacionado con la atención sanitaria, no con la evolución natural de su enfermedad', correcta: true },
+      { texto: 'Cualquier empeoramiento clínico del paciente durante el ingreso, sea cual sea la causa', correcta: false },
+      { texto: 'Un error de medicación, haya causado daño o no', correcta: false },
     ],
   },
   {
     id: 2,
     enunciado: 'El paciente tiene derecho a ser informado de un evento adverso que le afecte porque…',
     opciones: [
-      { texto: 'Es solo buena voluntad del profesional, no una obligación', correcta: false },
-      { texto: 'Es un derecho reconocido legalmente (Ley 41/2002, autonomía del paciente)', correcta: true },
-      { texto: 'Solo si el paciente lo pide por escrito', correcta: false },
+      { texto: 'Es una buena práctica recomendada, pero no existe obligación legal en España', correcta: false },
+      { texto: 'Es un derecho reconocido legalmente (Ley 41/2002, de autonomía del paciente)', correcta: true },
+      { texto: 'Solo es exigible si el evento ha causado un daño grave o permanente', correcta: false },
     ],
   },
   {
     id: 3,
     enunciado: 'Al comunicar un evento adverso, lo recomendable es…',
     opciones: [
-      { texto: 'Usar lenguaje técnico para ser preciso', correcta: false },
+      { texto: 'Esperar a que termine la investigación completa, para no dar información incompleta', correcta: false },
       { texto: 'Explicar los hechos con claridad y ofrecer un interlocutor de referencia', correcta: true },
-      { texto: 'Dar los mínimos detalles posibles para no alarmar', correcta: false },
+      { texto: 'Dar el máximo detalle técnico posible, para demostrar transparencia', correcta: false },
     ],
   },
   {
     id: 4,
     enunciado: 'Si te preguntan "¿de quién es la culpa?", lo adecuado es…',
     opciones: [
-      { texto: 'Dar un nombre concreto si lo sabes', correcta: false },
-      { texto: 'Decir que ha sido mala suerte', correcta: false },
-      { texto: 'Explicar que se va a analizar qué falló en el sistema, sin señalar a una persona', correcta: true },
+      { texto: 'Explicar que hay un responsable, pero que su identidad es confidencial', correcta: false },
+      { texto: 'Decir que probablemente nunca se sabrá qué pasó', correcta: false },
+      { texto: 'Explicar que se va a analizar qué ha pasado a nivel de proceso, sin señalar a una persona', correcta: true },
     ],
   },
   {
     id: 5,
     enunciado: 'Pedir disculpas por un evento adverso…',
     opciones: [
-      { texto: 'Es expresar pesar por lo ocurrido, no una admisión de culpa legal', correcta: true },
-      { texto: 'Equivale a reconocer responsabilidad jurídica', correcta: false },
-      { texto: 'Debe evitarse por motivos legales', correcta: false },
+      { texto: 'Es expresar pesar por lo ocurrido y no supone una admisión de responsabilidad legal', correcta: true },
+      { texto: 'Debe reservarse para los casos en que esté confirmado que alguien cometió un error', correcta: false },
+      { texto: 'Puede interpretarse como una admisión de culpa, así que es mejor evitarlo', correcta: false },
     ],
   },
 ];
@@ -82,11 +85,11 @@ export const pasos: PasoFormacion[] = [
       },
       {
         id: 2,
-        enunciado: 'Pedir disculpas al paciente…',
+        enunciado: 'El concepto de "segunda víctima" se refiere a…',
         opciones: [
-          { texto: 'Equivale a reconocer responsabilidad legal', correcta: false },
-          { texto: 'Es expresar pesar y es recomendable', correcta: true },
-          { texto: 'Debe evitarse', correcta: false },
+          { texto: 'El profesional sanitario implicado en el evento adverso, que también necesita apoyo tras lo ocurrido', correcta: true },
+          { texto: 'Un segundo paciente afectado por el mismo evento adverso', correcta: false },
+          { texto: 'El familiar del paciente que presenta una reclamación', correcta: false },
         ],
       },
     ],
@@ -101,20 +104,20 @@ export const pasos: PasoFormacion[] = [
     preguntas: [
       {
         id: 3,
-        enunciado: 'Ante "¿de quién es la culpa?", lo más adecuado es…',
+        enunciado: 'Un incidente que no ha causado ningún daño al paciente (p. ej. una dosis extra sin consecuencias)…',
         opciones: [
-          { texto: 'Indicar qué profesional estaba de turno', correcta: false },
-          { texto: 'Decir que fue culpa del paciente', correcta: false },
-          { texto: 'Explicar que se está analizando qué falló en el sistema', correcta: true },
+          { texto: 'No es necesario notificarlo si finalmente no hubo ninguna consecuencia clínica', correcta: false },
+          { texto: 'Debe notificarse siempre en el sistema de notificación del hospital, aunque no se comunique al paciente', correcta: true },
+          { texto: 'Solo debe notificarse si el paciente se da cuenta y pregunta', correcta: false },
         ],
       },
       {
         id: 4,
         enunciado: 'Si la familia quiere poner una reclamación…',
         opciones: [
-          { texto: 'Intentar disuadirla', correcta: false },
-          { texto: 'Informar de que es su derecho y cómo hacerlo', correcta: true },
-          { texto: 'Cambiar de tema', correcta: false },
+          { texto: 'Intentar convencerla de que no merece la pena, porque alargará un proceso que no va a cambiar nada', correcta: false },
+          { texto: 'Informar de que es su derecho y de cómo hacerlo (p. ej. a través de Atención al Paciente)', correcta: true },
+          { texto: 'Decirle que es mejor esperar al resultado de la investigación antes de reclamar', correcta: false },
         ],
       },
     ],

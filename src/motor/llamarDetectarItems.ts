@@ -1,5 +1,9 @@
-// Cliente del Edge Function `detectar-items` (docs/SPEC.md §4.1): si falla o tarda
-// más de 4 s se ignora ese turno (se incluirá como contexto en el siguiente).
+// Cliente del Edge Function `detectar-items` (docs/SPEC.md §4.1). El prompt del detector
+// solo busca evidencia en el ÚLTIMO turno del alumno (los turnos previos son solo
+// contexto): si esta llamada falla o tarda más de 4 s, ese turno se pierde para
+// siempre (en la siguiente llamada ya no es el "último turno"), así que un
+// reintento aquí evita falsos negativos por un fallo puntual de red o de latencia
+// del modelo — mismo patrón que obtenerCredencialVoz.ts.
 import type { ResultadoDeteccion } from '@/features/llamada/ChecklistEngine';
 import type { TurnoHistorial } from './tipos';
 
@@ -12,7 +16,7 @@ interface LlamarDetectarOpts {
 
 const TIMEOUT_MS = 4000;
 
-export async function llamarDetectarItems(opts: LlamarDetectarOpts): Promise<ResultadoDeteccion | null> {
+async function pedirDeteccion(opts: LlamarDetectarOpts): Promise<ResultadoDeteccion | null> {
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/detectar-items`;
   try {
     const res = await fetch(url, {
@@ -27,8 +31,14 @@ export async function llamarDetectarItems(opts: LlamarDetectarOpts): Promise<Res
     });
     if (!res.ok) return null;
     return (await res.json()) as ResultadoDeteccion;
-  } catch (e) {
-    console.warn('[detectar-items] turno ignorado (fallo o timeout):', e);
+  } catch {
     return null;
   }
+}
+
+export async function llamarDetectarItems(opts: LlamarDetectarOpts): Promise<ResultadoDeteccion | null> {
+  let resultado = await pedirDeteccion(opts);
+  if (resultado === null) resultado = await pedirDeteccion(opts);
+  if (resultado === null) console.warn('[detectar-items] turno ignorado tras reintentar (fallo o timeout)');
+  return resultado;
 }
