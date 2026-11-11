@@ -63,7 +63,7 @@ export const pasos: PasoFormacion[] = [
   {
     tipo: 'video',
     titulo: 'Introducción',
-    youtubeId: 'iM-87h6ZZ3I',
+    youtubeId: 'Rairlh8uqxM',
   },
   {
     tipo: 'preguntas',
