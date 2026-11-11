@@ -3,14 +3,16 @@
 // setFontSize, splitTextToSize, addPage, save).
 import { jsPDF } from 'jspdf';
 import type { Caso } from '@/lib/config/schemas';
-import type { ResultadoIntento } from '@/lib/progreso';
+import type { ResultadoIntento, ResultadoTest } from '@/lib/progreso';
 
 const MARGEN = 15;
 
 export function generarPdfEvaluacionFinal(datos: {
   casos: Caso[];
   resultados: ResultadoIntento[];
-  notaFormacion: number | null;
+  notaFormacion: ResultadoTest | null;
+  pretest?: ResultadoTest | null;
+  postest?: ResultadoTest | null;
 }): void {
   const doc = new jsPDF();
   const anchoUtil = doc.internal.pageSize.getWidth() - MARGEN * 2;
@@ -40,7 +42,13 @@ export function generarPdfEvaluacionFinal(datos: {
 
   doc.setFont('helvetica', 'normal');
   if (datos.notaFormacion !== null) {
-    escribirParrafo(`Nota del módulo formativo (mini-test): ${datos.notaFormacion}/10`);
+    escribirParrafo(`Preguntas del módulo formativo: ${datos.notaFormacion.aciertos}/${datos.notaFormacion.total}`);
+    y += 2;
+  }
+  if (datos.pretest && datos.postest) {
+    escribirParrafo(
+      `Conocimiento antes/después: ${datos.pretest.aciertos}/${datos.pretest.total} → ${datos.postest.aciertos}/${datos.postest.total}`,
+    );
     y += 2;
   }
 

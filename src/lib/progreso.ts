@@ -14,13 +14,23 @@ export interface ResultadoIntento {
   fecha: number;
 }
 
+// Aciertos en bruto (p. ej. "4/4"), no una nota convertida a escala /10: mostrar un
+// "10/10" cuando solo hay 4 preguntas reales generaba confusión real (reportado por
+// un alumno probando la app).
+export interface ResultadoTest {
+  aciertos: number;
+  total: number;
+}
+
 interface ProgresoAlmacenado {
   intentos: ResultadoIntento[];
-  notaFormacion: number | null;
+  notaFormacion: ResultadoTest | null;
+  pretest: ResultadoTest | null;
+  postest: ResultadoTest | null;
 }
 
 const CLAVE = 'progreso-intentos-v1';
-const VACIO: ProgresoAlmacenado = { intentos: [], notaFormacion: null };
+const VACIO: ProgresoAlmacenado = { intentos: [], notaFormacion: null, pretest: null, postest: null };
 
 interface AlmacenSimple {
   getItem(clave: string): string | null;
@@ -49,7 +59,12 @@ function leer(): ProgresoAlmacenado {
   if (!crudo) return { ...VACIO, intentos: [] };
   try {
     const datos = JSON.parse(crudo) as Partial<ProgresoAlmacenado>;
-    return { intentos: Array.isArray(datos.intentos) ? datos.intentos : [], notaFormacion: datos.notaFormacion ?? null };
+    return {
+      intentos: Array.isArray(datos.intentos) ? datos.intentos : [],
+      notaFormacion: datos.notaFormacion ?? null,
+      pretest: datos.pretest ?? null,
+      postest: datos.postest ?? null,
+    };
   } catch {
     return { ...VACIO, intentos: [] };
   }
@@ -83,12 +98,28 @@ export function obtenerTodosLosResultados(): ResultadoIntento[] {
   return [...leer().intentos].sort((a, b) => a.fecha - b.fecha);
 }
 
-export function guardarNotaFormacion(nota: number): void {
-  escribir({ ...leer(), notaFormacion: nota });
+export function guardarNotaFormacion(resultado: ResultadoTest): void {
+  escribir({ ...leer(), notaFormacion: resultado });
 }
 
-export function obtenerNotaFormacion(): number | null {
+export function obtenerNotaFormacion(): ResultadoTest | null {
   return leer().notaFormacion;
+}
+
+export function guardarPretest(resultado: ResultadoTest): void {
+  escribir({ ...leer(), pretest: resultado });
+}
+
+export function obtenerPretest(): ResultadoTest | null {
+  return leer().pretest;
+}
+
+export function guardarPostest(resultado: ResultadoTest): void {
+  escribir({ ...leer(), postest: resultado });
+}
+
+export function obtenerPostest(): ResultadoTest | null {
+  return leer().postest;
 }
 
 export function limpiarProgreso(): void {

@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { casosConfig } from '@/lib/config';
-import { obtenerNotaFormacion, obtenerTodosLosResultados } from '@/lib/progreso';
+import { preguntasPrePost } from '@/features/formacion/contenido';
+import MiniTest from '@/features/formacion/MiniTest';
+import {
+  guardarPostest,
+  obtenerNotaFormacion,
+  obtenerPostest,
+  obtenerPretest,
+  obtenerTodosLosResultados,
+} from '@/lib/progreso';
 import { generarPdfEvaluacionFinal } from '@/lib/exportarPdf';
 import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
 import { guardarEncuesta } from '@/lib/persistencia';
@@ -78,7 +86,11 @@ function EncuestaSatisfaccion({ alumnoId }: { alumnoId: string }) {
 export default function EvaluacionFinalPage() {
   const resultados = obtenerTodosLosResultados();
   const notaFormacion = obtenerNotaFormacion();
+  const pretest = obtenerPretest();
   const alumno = obtenerAlumnoLocal();
+  // Si ya se respondió el postest en esta sesión (p. ej. tras recargar la página), no
+  // se vuelve a pedir — se va directa al resumen.
+  const [postest, setPostest] = useState(() => obtenerPostest());
 
   if (resultados.length === 0) {
     return (
@@ -90,12 +102,41 @@ export default function EvaluacionFinalPage() {
     );
   }
 
+  if (postest === null) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-12">
+        <h1 className="text-xl font-semibold">Antes de ver tu evaluación final…</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Responde estas 5 preguntas — las mismas de antes de empezar — para medir lo que has aprendido.
+        </p>
+        <div className="mt-6">
+          <MiniTest
+            preguntas={preguntasPrePost}
+            onFinalizar={(aciertos) => {
+              const resultado = { aciertos, total: preguntasPrePost.length };
+              guardarPostest(resultado);
+              setPostest(resultado);
+            }}
+          />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="text-xl font-semibold">Evaluación final</h1>
 
       {notaFormacion !== null && (
-        <p className="mt-2 text-slate-600">Nota del módulo formativo: <strong>{notaFormacion}/10</strong></p>
+        <p className="mt-2 text-slate-600">
+          Preguntas del módulo formativo: <strong>{notaFormacion.aciertos}/{notaFormacion.total}</strong>
+        </p>
+      )}
+
+      {pretest !== null && (
+        <p className="mt-1 text-slate-600">
+          Conocimiento antes/después: <strong>{pretest.aciertos}/{pretest.total}</strong> → <strong>{postest.aciertos}/{postest.total}</strong>
+        </p>
       )}
 
       {[...casosConfig.casos]
@@ -128,7 +169,7 @@ export default function EvaluacionFinalPage() {
         <button
           type="button"
           onClick={() =>
-            generarPdfEvaluacionFinal({ casos: casosConfig.casos, resultados, notaFormacion })
+            generarPdfEvaluacionFinal({ casos: casosConfig.casos, resultados, notaFormacion, pretest, postest })
           }
           className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
         >

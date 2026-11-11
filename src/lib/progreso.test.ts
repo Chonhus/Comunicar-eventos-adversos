@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   guardarNotaFormacion,
+  guardarPostest,
+  guardarPretest,
   guardarResultadoIntento,
   limpiarProgreso,
   obtenerNotaFormacion,
+  obtenerPostest,
+  obtenerPretest,
   obtenerResultadosDeCaso,
   obtenerTodosLosResultados,
   obtenerUltimoResultado,
@@ -67,15 +71,24 @@ describe('progreso', () => {
   });
 
   it('guarda y recupera la nota de formación', () => {
-    guardarNotaFormacion(8);
-    expect(obtenerNotaFormacion()).toBe(8);
+    guardarNotaFormacion({ aciertos: 3, total: 4 });
+    expect(obtenerNotaFormacion()).toEqual({ aciertos: 3, total: 4 });
   });
 
   it('limpiarProgreso borra todo', () => {
     guardarResultadoIntento(fabricarResultado('n1_paracetamol', 1, 50));
-    guardarNotaFormacion(10);
+    guardarNotaFormacion({ aciertos: 4, total: 4 });
     limpiarProgreso();
     expect(obtenerTodosLosResultados()).toEqual([]);
     expect(obtenerNotaFormacion()).toBeNull();
+  });
+
+  it('guarda y recupera el pretest y el postest por separado', () => {
+    expect(obtenerPretest()).toBeNull();
+    expect(obtenerPostest()).toBeNull();
+    guardarPretest({ aciertos: 2, total: 5 });
+    guardarPostest({ aciertos: 5, total: 5 });
+    expect(obtenerPretest()).toEqual({ aciertos: 2, total: 5 });
+    expect(obtenerPostest()).toEqual({ aciertos: 5, total: 5 });
   });
 });

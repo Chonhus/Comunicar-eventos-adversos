@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pasos } from './contenido';
+import { pasos, preguntasPrePost } from './contenido';
 
 describe('contenido formativo', () => {
   it('tiene 4 vídeos y 2 bloques de preguntas', () => {
@@ -23,6 +23,16 @@ describe('contenido formativo', () => {
         const correctas = pregunta.opciones.filter((o) => o.correcta);
         expect(correctas).toHaveLength(1);
       }
+    }
+  });
+});
+
+describe('preguntasPrePost', () => {
+  it('tiene 5 preguntas, cada una con exactamente una opción correcta', () => {
+    expect(preguntasPrePost).toHaveLength(5);
+    for (const pregunta of preguntasPrePost) {
+      const correctas = pregunta.opciones.filter((o) => o.correcta);
+      expect(correctas).toHaveLength(1);
     }
   });
 });

@@ -1,7 +1,58 @@
 // Módulo formativo en vídeo (clase grabada, subida como "no listado" en YouTube).
 // Mientras no estén subidos todos, los pendientes llevan youtubeId: 'PENDIENTE' —
 // VideoFormacion.tsx muestra un aviso en vez de intentar incrustar un id inválido.
-import type { PasoFormacion } from './tipos';
+import type { PasoFormacion, PreguntaTest } from './tipos';
+
+// Mismas 5 preguntas antes (pretest, nada más pasar el consentimiento) y después
+// (postest, al llegar a la evaluación final del Nivel 2) — diseño pre/post clásico
+// para medir la mejora real, no solo si se acertó al final.
+export const preguntasPrePost: PreguntaTest[] = [
+  {
+    id: 1,
+    enunciado: '¿Qué es un evento adverso?',
+    opciones: [
+      { texto: 'Un daño al paciente relacionado con la atención sanitaria, no con su enfermedad de base', correcta: true },
+      { texto: 'Cualquier empeoramiento del paciente, sea cual sea la causa', correcta: false },
+      { texto: 'Solo el daño causado de forma intencionada', correcta: false },
+    ],
+  },
+  {
+    id: 2,
+    enunciado: 'El paciente tiene derecho a ser informado de un evento adverso que le afecte porque…',
+    opciones: [
+      { texto: 'Es solo buena voluntad del profesional, no una obligación', correcta: false },
+      { texto: 'Es un derecho reconocido legalmente (Ley 41/2002, autonomía del paciente)', correcta: true },
+      { texto: 'Solo si el paciente lo pide por escrito', correcta: false },
+    ],
+  },
+  {
+    id: 3,
+    enunciado: 'Al comunicar un evento adverso, lo recomendable es…',
+    opciones: [
+      { texto: 'Usar lenguaje técnico para ser preciso', correcta: false },
+      { texto: 'Explicar los hechos con claridad y ofrecer un interlocutor de referencia', correcta: true },
+      { texto: 'Dar los mínimos detalles posibles para no alarmar', correcta: false },
+    ],
+  },
+  {
+    id: 4,
+    enunciado: 'Si te preguntan "¿de quién es la culpa?", lo adecuado es…',
+    opciones: [
+      { texto: 'Dar un nombre concreto si lo sabes', correcta: false },
+      { texto: 'Decir que ha sido mala suerte', correcta: false },
+      { texto: 'Explicar que se va a analizar qué falló en el sistema, sin señalar a una persona', correcta: true },
+    ],
+  },
+  {
+    id: 5,
+    enunciado: 'Pedir disculpas por un evento adverso…',
+    opciones: [
+      { texto: 'Es expresar pesar por lo ocurrido, no una admisión de culpa legal', correcta: true },
+      { texto: 'Equivale a reconocer responsabilidad jurídica', correcta: false },
+      { texto: 'Debe evitarse por motivos legales', correcta: false },
+    ],
+  },
+];
 
 export const pasos: PasoFormacion[] = [
   {

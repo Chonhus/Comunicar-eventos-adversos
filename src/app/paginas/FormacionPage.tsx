@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { pasos } from '@/features/formacion/contenido';
+import { pasos, preguntasPrePost } from '@/features/formacion/contenido';
 import VideoFormacion from '@/features/formacion/VideoFormacion';
 import MiniTest from '@/features/formacion/MiniTest';
 import { obtenerCasoPorNivel } from '@/lib/config';
-import { guardarNotaFormacion } from '@/lib/progreso';
+import { guardarNotaFormacion, guardarPretest } from '@/lib/progreso';
 import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
 import { guardarProgresoBloque } from '@/lib/persistencia';
 
@@ -12,18 +12,23 @@ const TOTAL_PREGUNTAS = pasos
   .filter((p) => p.tipo === 'preguntas')
   .reduce((acc, p) => acc + p.preguntas.length, 0);
 
-type Fase = { tipo: 'paso'; indice: number } | { tipo: 'resultado'; nota: number };
+type Fase =
+  | { tipo: 'pretest' }
+  | { tipo: 'paso'; indice: number }
+  | { tipo: 'resultado'; aciertos: number; total: number };
 
 export default function FormacionPage() {
-  const [fase, setFase] = useState<Fase>({ tipo: 'paso', indice: 0 });
+  const [fase, setFase] = useState<Fase>({ tipo: 'pretest' });
   const navigate = useNavigate();
   // Aciertos de los dos bloques de preguntas intercalados entre los vídeos: se suman
-  // en una única nota final. Con useRef (no un estado) porque se lee en el mismo
-  // instante en que se actualiza, antes de que un re-render lo reflejara.
+  // en una única puntuación final. Con useRef (no un estado) porque se lee en el
+  // mismo instante en que se actualiza, antes de que un re-render lo reflejara.
   const aciertosRef = useRef(0);
 
-  const pasoActual = fase.tipo === 'paso' ? fase.indice + 1 : pasos.length;
-  const progresoPct = Math.round((pasoActual / pasos.length) * 100);
+  // +1 por el pretest, que cuenta como un paso más a efectos de la barra de progreso.
+  const pasosTotales = pasos.length + 1;
+  const pasoActual = fase.tipo === 'pretest' ? 1 : fase.tipo === 'paso' ? fase.indice + 2 : pasosTotales;
+  const progresoPct = Math.round((pasoActual / pasosTotales) * 100);
   // Un único const (no volver a indexar pasos[...] más abajo): así TS estrecha el
   // tipo de PasoFormacion a PasoVideo/PasoPreguntas según paso.tipo.
   const paso = fase.tipo === 'paso' ? pasos[fase.indice] : null;
@@ -40,9 +45,9 @@ export default function FormacionPage() {
 
   function avanzarDesde(indice: number) {
     if (indice === pasos.length - 1) {
-      const nota = TOTAL_PREGUNTAS > 0 ? Math.round((aciertosRef.current / TOTAL_PREGUNTAS) * 10) : 0;
-      guardarNotaFormacion(nota);
-      setFase({ tipo: 'resultado', nota });
+      const resultado = { aciertos: aciertosRef.current, total: TOTAL_PREGUNTAS };
+      guardarNotaFormacion(resultado);
+      setFase({ tipo: 'resultado', ...resultado });
     } else {
       setFase({ tipo: 'paso', indice: indice + 1 });
     }
@@ -60,6 +65,21 @@ export default function FormacionPage() {
       </div>
 
       <div className="mt-6">
+        {fase.tipo === 'pretest' && (
+          <>
+            <p className="mb-4 text-sm text-slate-600">
+              Antes de empezar, responde estas preguntas — es solo para medir lo que aprendes, no cuenta en tu contra.
+            </p>
+            <MiniTest
+              preguntas={preguntasPrePost}
+              onFinalizar={(aciertos) => {
+                guardarPretest({ aciertos, total: preguntasPrePost.length });
+                setFase({ tipo: 'paso', indice: 0 });
+              }}
+            />
+          </>
+        )}
+
         {fase.tipo === 'paso' && paso?.tipo === 'video' && (
           <>
             <VideoFormacion paso={paso} />
@@ -100,7 +120,7 @@ export default function FormacionPage() {
         {fase.tipo === 'resultado' && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
             <p className="text-sm text-slate-500">Preguntas completadas</p>
-            <p className="mt-1 text-3xl font-semibold">{fase.nota} / 10</p>
+            <p className="mt-1 text-3xl font-semibold">{fase.aciertos} / {fase.total}</p>
             <p className="mt-2 text-sm text-slate-600">
               La nota queda registrada; no bloquea el acceso al Nivel 1.
             </p>

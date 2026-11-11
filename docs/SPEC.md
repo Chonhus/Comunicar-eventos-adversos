@@ -8,6 +8,7 @@ Que el profesional sanitario (residentes, enfermería, estudiantes de último cu
 ```
 Acceso (código de grupo o login) 
   → Consentimiento (micrófono y tratamiento de voz)
+  → Pretest (5 preguntas, antes de ver ningún vídeo)
   → Módulo formativo (4 vídeos + 2 bloques de preguntas intercalados)
   → Nivel 1 · Caso sencillo
        → Briefing del caso
@@ -15,7 +16,8 @@ Acceso (código de grupo o login)
        → Intento 2 (videollamada) → Feedback del intento + comparación con intento 1
   → Nivel 2 · Caso difícil (se desbloquea al terminar el Nivel 1)
        → mismo esquema
-  → Evaluación final (resumen de los 4 intentos, descargable en PDF)
+  → Postest (las mismas 5 preguntas del pretest, mide la mejora)
+  → Evaluación final (resumen de los 4 intentos + comparación pretest/postest, descargable en PDF)
 ```
 
 - **Intentos:** `maxIntentos = 2` por caso (configurable). El alumno puede saltarse el 2.º intento si lo desea.
@@ -32,10 +34,11 @@ Acceso (código de grupo o login)
 Texto breve: la voz se transcribe y procesa en servicios externos (reconocimiento y síntesis de voz, Anthropic), preferentemente en la UE, solo con fines formativos; se guarda la transcripción y la evaluación; casos ficticios. Botón "Acepto y activar micrófono" (pide permiso del navegador).
 
 ### 3.3 Módulo formativo
+- Antes del primer vídeo, un **pretest** de 5 preguntas (`preguntasPrePost` en `contenido.ts`) para medir el conocimiento de partida; no es bloqueante ni cuenta en contra.
 - 4 vídeos de una clase grabada (presentación, introducción, cómo notificar un evento adverso, conclusiones), subidos como "no listados" en YouTube e incrustados con `youtube-nocookie.com` — ver `src/features/formacion/contenido.ts`. `docs/FORMACION.md` queda como guion/referencia de contenido, no como lo que se renderiza.
 - Tras el vídeo de introducción y tras el de notificación, un bloque de 2 preguntas cada uno (feedback inmediato).
-- Barra de progreso por paso (vídeo o preguntas).
-- Al terminar, nota combinada de las 4 preguntas sobre 10. No bloqueante, pero se registra.
+- Barra de progreso por paso (pretest, vídeo o preguntas).
+- Al terminar, aciertos en bruto de los 2 bloques intercalados (p. ej. «4/4»), nunca escalados a una nota sobre 10 — mostrar una nota /10 con menos preguntas reales confundía al alumno. No bloqueante, pero se registra.
 
 ### 3.4 Briefing del caso
 - Contexto clínico para el alumno (qué ha pasado, qué sabe él, a quién va a hablar).
@@ -69,13 +72,14 @@ Diseño tipo Teams/Zoom:
 
 ### 3.6 Feedback del intento
 - Puntuación global (0–100) y por ítem (0 = no, 1 = parcial, 2 = completo).
-- 3 fortalezas y 3 mejoras concretas, con **frases alternativas** sugeridas.
+- 2 fortalezas y 2 mejoras concretas, con **frases alternativas** sugeridas.
 - Alertas detectadas con la frase literal.
 - En el intento 2: comparación con el intento 1 (qué ha mejorado).
 - Botones: "Repetir (intento 2)" / "Pasar al siguiente nivel".
 
 ### 3.7 Evaluación final
-- Resumen de ambos niveles, evolución entre intentos, nota de formación (mini-test).
+- Antes de mostrarla, **postest**: las mismas 5 preguntas del pretest (§3.3).
+- Resumen de ambos niveles, evolución entre intentos, aciertos del módulo formativo (en bruto, p. ej. «4/4») y comparación pretest → postest.
 - Descargar PDF (generado en cliente, p. ej. `@react-pdf/renderer` o `jspdf`).
 - Encuesta de satisfacción opcional (3 preguntas Likert + 1 abierta) — útil para investigación.
 

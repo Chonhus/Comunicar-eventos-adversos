@@ -1,6 +1,8 @@
 # Módulo formativo previo (borrador de contenido)
 
 > **Nota:** el módulo ya no se renderiza como tarjetas de texto — ahora son 4 vídeos de una clase grabada (ver `src/features/formacion/contenido.ts`). Este documento queda como guion/referencia del contenido que cubren los vídeos, no como lo que ve el alumno en pantalla.
+>
+> **Pretest/postest:** justo después del consentimiento (antes del primer vídeo) el alumno responde un pretest de 5 preguntas (`preguntasPrePost` en `contenido.ts`); las mismas 5 preguntas se repiten como postest antes de mostrar la evaluación final del Nivel 2. Es el mismo diseño clásico pre/post para medir la mejora real, no una nota que cuente en contra. El resultado de cada mini-test (incluidos los dos bloques intercalados entre vídeos) se muestra como aciertos en bruto («4/4»), nunca escalado a una nota sobre 10.
 
 > Contenido base para revisar y adaptar por el equipo docente. Cada bloque = una tarjeta en la app (texto breve + 3–4 puntos clave). Duración total estimada: 10–12 min.
 
