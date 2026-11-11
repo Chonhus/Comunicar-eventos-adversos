@@ -40,7 +40,7 @@ export const pasos: PasoFormacion[] = [
   {
     tipo: 'video',
     titulo: 'Cómo notificar un evento adverso',
-    youtubeId: 'PENDIENTE',
+    youtubeId: 'PV76wigbwoY',
   },
   {
     tipo: 'preguntas',
