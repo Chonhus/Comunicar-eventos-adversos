@@ -21,7 +21,7 @@ Tu tarea: decidir si el ÚLTIMO TURNO DEL ALUMNO cumple alguno de los ítems PEN
 - Si no hay nada, devuelve listas vacías.
 - La transcripción procede de reconocimiento de voz: tolera errores ortográficos y de puntuación.
 - Contexto legal español: no existe una "ley de disculpa" que proteja estas declaraciones ante un tribunal. Para marcar \`explica_evento\` o \`lamenta\` NUNCA exijas que el alumno declare culpa, negligencia o responsabilidad legal (propia, de un compañero o de la institución); basta con que explique los hechos conocidos con honestidad y exprese pesar o disculpa sincera.
-- Indicación legal adicional del hospital: para marcar \`explica_evento\` NUNCA exijas ni esperes que el alumno use la palabra "error" (ni "fallo", "equivocación"); basta con que describa los hechos de forma neutra (qué se administró/hizo y cuándo, frente a lo indicado o pautado).
+- Indicación legal adicional del hospital: el alumno puede usar la palabra "error" o "fallo" al marcar \`explica_evento\`, siempre que lo refiera al proceso o al sistema (p. ej. "hubo un error en el proceso de administración"); no lo exijas, basta con que describa los hechos con honestidad. Si lo atribuye a una persona concreta (p. ej. "la enfermera se equivocó"), eso es culpabilizar (alerta \`culpabiliza\`), no una buena explicación del evento.
 
 Responde SOLO con JSON válido con este esquema:
 {"cumplidos":[{"id":"string","calidad":"completo|parcial","evidencia":"string"}],"alertas":[{"id":"string","evidencia":"string"}]}`;

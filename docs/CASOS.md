@@ -35,7 +35,7 @@ Antonio está consciente, orientado y tranquilo. Vas a su habitación a comunic�
 
 ### Hechos de referencia (evaluador)
 - Evento: dosis extra de paracetamol 1 g — se administraron dos dosis con 1 hora de diferencia en lugar de las 6 h indicadas en la hoja de administración; dosis total 24 h = 4 g (límite seguro); analítica hepática normal; sin daño.
-- **Indicación legal del hospital:** no usar la palabra "error" (ni "fallo") para describir lo ocurrido, ni exigir que el alumno la use; describir los hechos de forma neutra (qué dosis se administró, cuándo, y que no coincidió con lo indicado).
+- **Indicación legal del hospital:** se puede usar la palabra "error" o "fallo" para describir lo ocurrido, siempre referido al proceso o al sistema (p. ej. "hubo un error en el proceso de administración"), pero nunca atribuido a una persona concreta (no decir que la enfermera o el médico fallaron/se equivocaron).
 - Antecedente relevante del paciente: hígado graso (el alumno no lo sabe de antemano; si el paciente lo menciona, una buena respuesta lo integra y tranquiliza con datos).
 - Buen plan: vigilancia clínica, repetir analítica si se considera, informar de síntomas de alarma, sin cambios en el tratamiento de la neumonía.
 - Prevención: notificado; revisión del procedimiento de registro de administración.
