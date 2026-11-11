@@ -1,31 +1,51 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { bloques } from '@/features/formacion/contenido';
-import TarjetaBloque from '@/features/formacion/TarjetaBloque';
+import { pasos } from '@/features/formacion/contenido';
+import VideoFormacion from '@/features/formacion/VideoFormacion';
 import MiniTest from '@/features/formacion/MiniTest';
 import { obtenerCasoPorNivel } from '@/lib/config';
 import { guardarNotaFormacion } from '@/lib/progreso';
 import { obtenerAlumnoLocal } from '@/lib/accesoAlumno';
 import { guardarProgresoBloque } from '@/lib/persistencia';
 
-type Fase = { tipo: 'bloque'; indice: number } | { tipo: 'test' } | { tipo: 'resultado'; nota: number };
+const TOTAL_PREGUNTAS = pasos
+  .filter((p) => p.tipo === 'preguntas')
+  .reduce((acc, p) => acc + p.preguntas.length, 0);
+
+type Fase = { tipo: 'paso'; indice: number } | { tipo: 'resultado'; nota: number };
 
 export default function FormacionPage() {
-  const [fase, setFase] = useState<Fase>({ tipo: 'bloque', indice: 0 });
+  const [fase, setFase] = useState<Fase>({ tipo: 'paso', indice: 0 });
   const navigate = useNavigate();
+  // Aciertos de los dos bloques de preguntas intercalados entre los vídeos: se suman
+  // en una única nota final. Con useRef (no un estado) porque se lee en el mismo
+  // instante en que se actualiza, antes de que un re-render lo reflejara.
+  const aciertosRef = useRef(0);
 
-  const pasosTotales = bloques.length + 1; // + mini-test
-  const pasoActual = fase.tipo === 'bloque' ? fase.indice + 1 : pasosTotales;
-  const progresoPct = Math.round((pasoActual / pasosTotales) * 100);
+  const pasoActual = fase.tipo === 'paso' ? fase.indice + 1 : pasos.length;
+  const progresoPct = Math.round((pasoActual / pasos.length) * 100);
+  // Un único const (no volver a indexar pasos[...] más abajo): así TS estrecha el
+  // tipo de PasoFormacion a PasoVideo/PasoPreguntas según paso.tipo.
+  const paso = fase.tipo === 'paso' ? pasos[fase.indice] : null;
 
   function continuarAlNivel1() {
     const caso = obtenerCasoPorNivel(1);
     navigate(`/briefing/${caso.id}`);
   }
 
-  function marcarBloqueCompletado(indice: number, notaTest?: number) {
+  function marcarPasoCompletado(indice: number, notaTest?: number) {
     const alumno = obtenerAlumnoLocal();
     if (alumno) void guardarProgresoBloque(alumno.id, indice, notaTest);
+  }
+
+  function avanzarDesde(indice: number) {
+    if (indice === pasos.length - 1) {
+      const nota = TOTAL_PREGUNTAS > 0 ? Math.round((aciertosRef.current / TOTAL_PREGUNTAS) * 10) : 0;
+      guardarNotaFormacion(nota);
+      setFase({ tipo: 'resultado', nota });
+    } else {
+      setFase({ tipo: 'paso', indice: indice + 1 });
+    }
   }
 
   return (
@@ -40,13 +60,13 @@ export default function FormacionPage() {
       </div>
 
       <div className="mt-6">
-        {fase.tipo === 'bloque' && (
+        {fase.tipo === 'paso' && paso?.tipo === 'video' && (
           <>
-            <TarjetaBloque bloque={bloques[fase.indice]} />
+            <VideoFormacion paso={paso} />
             <div className="mt-5 flex justify-between">
               <button
                 type="button"
-                onClick={() => setFase({ tipo: 'bloque', indice: fase.indice - 1 })}
+                onClick={() => setFase({ tipo: 'paso', indice: fase.indice - 1 })}
                 disabled={fase.indice === 0}
                 className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 disabled:opacity-0"
               >
@@ -55,31 +75,31 @@ export default function FormacionPage() {
               <button
                 type="button"
                 onClick={() => {
-                  marcarBloqueCompletado(fase.indice);
-                  if (fase.indice === bloques.length - 1) setFase({ tipo: 'test' });
-                  else setFase({ tipo: 'bloque', indice: fase.indice + 1 });
+                  marcarPasoCompletado(fase.indice);
+                  avanzarDesde(fase.indice);
                 }}
                 className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
               >
-                {fase.indice === bloques.length - 1 ? 'Empezar mini-test' : 'Siguiente'}
+                {fase.indice === pasos.length - 1 ? 'Finalizar' : 'Siguiente'}
               </button>
             </div>
           </>
         )}
 
-        {fase.tipo === 'test' && (
+        {fase.tipo === 'paso' && paso?.tipo === 'preguntas' && (
           <MiniTest
-            onFinalizar={(nota) => {
-              guardarNotaFormacion(nota);
-              marcarBloqueCompletado(bloques.length, nota);
-              setFase({ tipo: 'resultado', nota });
+            preguntas={paso.preguntas}
+            onFinalizar={(aciertos) => {
+              aciertosRef.current += aciertos;
+              marcarPasoCompletado(fase.indice, Math.round((aciertos / paso.preguntas.length) * 10));
+              avanzarDesde(fase.indice);
             }}
           />
         )}
 
         {fase.tipo === 'resultado' && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-            <p className="text-sm text-slate-500">Mini-test completado</p>
+            <p className="text-sm text-slate-500">Preguntas completadas</p>
             <p className="mt-1 text-3xl font-semibold">{fase.nota} / 10</p>
             <p className="mt-2 text-sm text-slate-600">
               La nota queda registrada; no bloquea el acceso al Nivel 1.

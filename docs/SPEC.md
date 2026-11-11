@@ -8,7 +8,7 @@ Que el profesional sanitario (residentes, enfermería, estudiantes de último cu
 ```
 Acceso (código de grupo o login) 
   → Consentimiento (micrófono y tratamiento de voz)
-  → Módulo formativo (5 bloques + mini-test)
+  → Módulo formativo (4 vídeos + 2 bloques de preguntas intercalados)
   → Nivel 1 · Caso sencillo
        → Briefing del caso
        → Intento 1 (videollamada) → Feedback del intento
@@ -32,9 +32,10 @@ Acceso (código de grupo o login)
 Texto breve: la voz se transcribe y procesa en servicios externos (reconocimiento y síntesis de voz, Anthropic), preferentemente en la UE, solo con fines formativos; se guarda la transcripción y la evaluación; casos ficticios. Botón "Acepto y activar micrófono" (pide permiso del navegador).
 
 ### 3.3 Módulo formativo
-- 5 bloques (contenido en `docs/FORMACION.md`), cada uno en una tarjeta con texto, puntos clave e ilustración sencilla. Opcional: vídeo incrustado si lo aportamos.
-- Barra de progreso.
-- Mini-test final (5 preguntas, feedback inmediato). No bloqueante, pero se registra la nota.
+- 4 vídeos de una clase grabada (presentación, introducción, cómo notificar un evento adverso, conclusiones), subidos como "no listados" en YouTube e incrustados con `youtube-nocookie.com` — ver `src/features/formacion/contenido.ts`. `docs/FORMACION.md` queda como guion/referencia de contenido, no como lo que se renderiza.
+- Tras el vídeo de introducción y tras el de notificación, un bloque de 2 preguntas cada uno (feedback inmediato).
+- Barra de progreso por paso (vídeo o preguntas).
+- Al terminar, nota combinada de las 4 preguntas sobre 10. No bloqueante, pero se registra.
 
 ### 3.4 Briefing del caso
 - Contexto clínico para el alumno (qué ha pasado, qué sabe él, a quién va a hablar).

@@ -1,8 +1,9 @@
-export interface BloqueFormacion {
-  id: number;
+export interface PasoVideo {
+  tipo: 'video';
   titulo: string;
-  contenido: string[];
-  puntosClave?: string[];
+  descripcion?: string;
+  /** Id del vídeo de YouTube (lo que va después de youtu.be/ o ?v=), no la URL completa. */
+  youtubeId: string;
 }
 
 export interface OpcionTest {
@@ -15,3 +16,10 @@ export interface PreguntaTest {
   enunciado: string;
   opciones: OpcionTest[];
 }
+
+export interface PasoPreguntas {
+  tipo: 'preguntas';
+  preguntas: PreguntaTest[];
+}
+
+export type PasoFormacion = PasoVideo | PasoPreguntas;

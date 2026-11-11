@@ -1,13 +1,21 @@
 import { useState } from 'react';
-import { preguntasTest } from './contenido';
+import type { PreguntaTest } from './tipos';
 
-export default function MiniTest({ onFinalizar }: { onFinalizar: (notaSobre10: number) => void }) {
+/** onFinalizar recibe los aciertos (no una nota sobre 10): con dos bloques de preguntas
+ * en pasos distintos, FormacionPage los suma todos para una única nota final. */
+export default function MiniTest({
+  preguntas,
+  onFinalizar,
+}: {
+  preguntas: PreguntaTest[];
+  onFinalizar: (aciertos: number) => void;
+}) {
   const [indice, setIndice] = useState(0);
   const [aciertos, setAciertos] = useState(0);
   const [seleccion, setSeleccion] = useState<number | null>(null);
 
-  const pregunta = preguntasTest[indice];
-  const esUltima = indice === preguntasTest.length - 1;
+  const pregunta = preguntas[indice];
+  const esUltima = indice === preguntas.length - 1;
 
   function elegir(opcionIndex: number) {
     if (seleccion !== null) return; // ya respondida
@@ -17,8 +25,7 @@ export default function MiniTest({ onFinalizar }: { onFinalizar: (notaSobre10: n
 
   function siguiente() {
     if (esUltima) {
-      const totalAciertos = aciertos; // "aciertos" ya incluye la respuesta actual (se actualizó en elegir)
-      onFinalizar(Math.round((totalAciertos / preguntasTest.length) * 10));
+      onFinalizar(aciertos); // "aciertos" ya incluye la respuesta actual (se actualizó en elegir)
       return;
     }
     setIndice((i) => i + 1);
@@ -28,7 +35,7 @@ export default function MiniTest({ onFinalizar }: { onFinalizar: (notaSobre10: n
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <p className="text-sm text-slate-500">
-        Pregunta {indice + 1} de {preguntasTest.length}
+        Pregunta {indice + 1} de {preguntas.length}
       </p>
       <h2 className="mt-1 text-lg font-semibold">{pregunta.enunciado}</h2>
       <div className="mt-4 flex flex-col gap-2">

@@ -1,5 +1,7 @@
 # Módulo formativo previo (borrador de contenido)
 
+> **Nota:** el módulo ya no se renderiza como tarjetas de texto — ahora son 4 vídeos de una clase grabada (ver `src/features/formacion/contenido.ts`). Este documento queda como guion/referencia del contenido que cubren los vídeos, no como lo que ve el alumno en pantalla.
+
 > Contenido base para revisar y adaptar por el equipo docente. Cada bloque = una tarjeta en la app (texto breve + 3–4 puntos clave). Duración total estimada: 10–12 min.
 
 ## Bloque 1 · ¿Qué es un evento adverso?
