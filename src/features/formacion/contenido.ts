@@ -19,11 +19,14 @@ export const pasos: PasoFormacion[] = [
     preguntas: [
       {
         id: 1,
-        enunciado: 'Un paciente recibe una dosis extra de un fármaco sin sufrir daño. ¿Hay que comunicárselo?',
+        enunciado: 'El método CANDOR (Communication and Optimal Resolution)…',
         opciones: [
-          { texto: 'No, porque no hubo daño', correcta: false },
-          { texto: 'Sí, también se comunica', correcta: true },
-          { texto: 'Solo si pregunta', correcta: false },
+          { texto: 'Es una estrategia de "negar y defender" ante el paciente', correcta: false },
+          {
+            texto: 'Es un proceso estructurado de comunicación abierta y resolución tras un evento adverso, que incluye también el apoyo al profesional implicado',
+            correcta: true,
+          },
+          { texto: 'Solo se aplica a incidentes sin ningún tipo de daño', correcta: false },
         ],
       },
       {
