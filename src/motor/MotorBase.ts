@@ -14,7 +14,11 @@ import { crearProveedorTTS } from './tts';
 import type { ProveedorTTS } from './tts/tipos';
 import type { EventosMotor, MotorConversacion, TurnoHistorial } from './tipos';
 
-const MAX_TURNOS_CONTEXTO = 12;
+// 24 turnos (12 intercambios) en vez de los 12 originales: en una llamada algo
+// larga, lo dicho al principio (p.ej. la explicación del evento) se salía de la
+// ventana y el personaje "se olvidaba" de que ya se le había contado — bug real
+// reportado ("le dije que no le he hablado claro, cuando ya se lo había contado").
+const MAX_TURNOS_CONTEXTO = 24;
 const MAX_TURNOS_CONTEXTO_DETECTOR = 6;
 
 export abstract class MotorBase implements MotorConversacion {
