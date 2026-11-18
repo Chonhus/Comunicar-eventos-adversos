@@ -8,6 +8,7 @@ import { cargarCaso } from '../_shared/casos.ts';
 import { cargarChecklist } from '../_shared/checklist.ts';
 import { cargarHechosReferencia } from '../_shared/hechosReferencia.ts';
 import { llamarClaude } from '../_shared/anthropic.ts';
+import { errorSiTurnosExcesivos } from '../_shared/limites.ts';
 import { extraerJson } from '../_shared/extraerJson.ts';
 
 const MODELO_EVALUADOR = Deno.env.get('CLAUDE_MODELO_EVALUADOR') ?? 'claude-sonnet-5-5';
@@ -207,6 +208,8 @@ Deno.serve(async (req) => {
   if (!esPeticionValida(body)) {
     return respuestaError('Cuerpo esperado: { casoId, turnos, checklistDetector, duracionSeg }');
   }
+  const errorLimites = errorSiTurnosExcesivos(body.turnos);
+  if (errorLimites) return respuestaError(errorLimites);
 
   let userPrompt: string;
   try {

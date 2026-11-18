@@ -4,6 +4,7 @@
 import { corsHeaders, respuestaError, respuestaOpciones } from '../_shared/cors.ts';
 import { cargarPersonaje, construirSystemPrompt } from '../_shared/personajes.ts';
 import { llamarClaudeStream, type MensajeClaude } from '../_shared/anthropic.ts';
+import { errorSiTurnosExcesivos } from '../_shared/limites.ts';
 
 interface TurnoEntrada {
   rol: 'alumno' | 'avatar';
@@ -43,6 +44,8 @@ Deno.serve(async (req) => {
   if (!esPeticionValida(body)) {
     return respuestaError('Cuerpo esperado: { casoId, historial, turnoAlumno }');
   }
+  const errorLimites = errorSiTurnosExcesivos([...body.historial, { texto: body.turnoAlumno }]);
+  if (errorLimites) return respuestaError(errorLimites);
 
   let systemPrompt: string;
   try {

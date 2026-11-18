@@ -6,6 +6,7 @@ import { cargarCaso } from '../_shared/casos.ts';
 import { cargarChecklist } from '../_shared/checklist.ts';
 import { llamarClaude } from '../_shared/anthropic.ts';
 import { extraerJson } from '../_shared/extraerJson.ts';
+import { errorSiTurnosExcesivos } from '../_shared/limites.ts';
 
 const MODELO_DETECTOR = Deno.env.get('CLAUDE_MODELO_DETECTOR') ?? 'claude-haiku-5-5';
 const MAX_TOKENS = 300;
@@ -74,6 +75,8 @@ Deno.serve(async (req) => {
   if (!esPeticionValida(body)) {
     return respuestaError('Cuerpo esperado: { casoId, pendientes, contexto, turno }');
   }
+  const errorLimites = errorSiTurnosExcesivos([...body.contexto, { texto: body.turno }]);
+  if (errorLimites) return respuestaError(errorLimites);
 
   let caso;
   let checklist;
