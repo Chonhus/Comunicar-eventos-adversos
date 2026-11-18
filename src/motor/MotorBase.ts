@@ -35,6 +35,16 @@ export abstract class MotorBase implements MotorConversacion {
   // llegara a reproducir la primera frase. Ahora se mide de verdad con el callback
   // onInicio de la primera frase de cada respuesta (ver procesarColaSiLibre/emitirPrimerAudio).
   private metricasActuales: { t0: number; primerTokenMs: number | null } | null = null;
+  // El subtítulo (textoAvatar) y el historial deben reflejar lo que realmente se ha
+  // llegado a DECIR en voz, no lo que la IA ya ha generado por delante: antes se
+  // emitía el texto completo del streaming en cuanto llegaba, así que si el alumno
+  // interrumpía a mitad de la respuesta, en pantalla se quedaba un texto más largo
+  // de lo que de verdad llegó a oírse (bug real reportado). Ahora se va acumulando
+  // frase a frase, justo cuando cada una empieza a reproducirse (ver
+  // procesarColaSiLibre/finalizarTurnoAvatar), y se da por "final" solo cuando
+  // termina de sonar la última frase o se interrumpe — nunca antes.
+  private textoHablado = '';
+  private turnoAvatarPendiente = false;
 
   constructor(protected readonly config: MotorConfig) {
     this.checklist = new ChecklistEngine(checklistConfig.items.map((i) => i.id));
@@ -69,9 +79,22 @@ export abstract class MotorBase implements MotorConversacion {
   protected interrumpir(): void {
     if (!this.maquina.interrumpir()) return;
     this.pararTodo();
+    this.finalizarTurnoAvatar();
     this.colaFrases = [];
     this.reproduciendo = false;
     this.emisor.emit('estado', 'escuchando');
+  }
+
+  /** Cierra el turno del avatar con lo que de verdad se ha dicho hasta ahora (al
+   * terminar de forma natural, o al interrumpirlo a mitad). No hace nada si no hay
+   * ningún turno de avatar en curso (p.ej. al interrumpir la frase de apertura, que
+   * no pasa por aquí). */
+  private finalizarTurnoAvatar(): void {
+    if (!this.turnoAvatarPendiente) return;
+    this.turnoAvatarPendiente = false;
+    if (!this.textoHablado) return;
+    this.emisor.emit('textoAvatar', { texto: this.textoHablado, final: true });
+    this.historial.push({ rol: 'avatar', texto: this.textoHablado });
   }
 
   /** Si el alumno tarda en hablar al empezar la llamada, el avatar rompe el hielo (docs/MOTOR.md §6). */
@@ -141,7 +164,8 @@ export abstract class MotorBase implements MotorConversacion {
 
     const metricas = { t0: performance.now(), primerTokenMs: null as number | null };
     this.metricasActuales = metricas;
-    let textoCompleto = '';
+    this.textoHablado = '';
+    this.turnoAvatarPendiente = true;
     let emocionEmitida = false;
 
     try {
@@ -157,23 +181,16 @@ export abstract class MotorBase implements MotorConversacion {
             this.emisor.emit('emocion', emocion);
             emocionEmitida = true;
           }
-          if (texto) {
-            textoCompleto += texto;
-            this.emisor.emit('textoAvatar', { texto: textoCompleto, final: false });
-            fraseBuffer.agregar(texto);
-          }
+          if (texto) fraseBuffer.agregar(texto);
         },
       });
       fraseBuffer.finalizar();
-      if (textoCompleto) {
-        this.emisor.emit('textoAvatar', { texto: textoCompleto, final: true });
-        this.historial.push({ rol: 'avatar', texto: textoCompleto });
-      }
       this.colaFrases.push(null); // marca de fin de stream
       this.procesarColaSiLibre();
     } catch (e) {
       if ((e as Error).name === 'AbortError') return; // barge-in: ya gestionado por interrumpir()
       console.error('[motor] error generando la respuesta del personaje:', e);
+      this.finalizarTurnoAvatar(); // deja constancia de lo que sí llegó a decirse, si algo
       this.colaFrases = [];
       if (this.maquina.estadoActual !== 'escuchando') {
         if (this.maquina.estadoActual === 'pensando') this.maquina.primerAudioListo();
@@ -195,11 +212,15 @@ export abstract class MotorBase implements MotorConversacion {
 
     if (siguiente === null) {
       if (this.colaFrases.length === 0 && this.maquina.estadoActual === 'hablando') {
+        this.finalizarTurnoAvatar();
         this.maquina.streamTerminadoYColaVacia();
         this.emisor.emit('estado', 'escuchando');
       }
       return;
     }
+
+    this.textoHablado += (this.textoHablado ? ' ' : '') + siguiente;
+    this.emisor.emit('textoAvatar', { texto: this.textoHablado, final: false });
 
     this.reproduciendo = true;
     if (this.maquina.estadoActual === 'pensando') {
@@ -234,5 +255,7 @@ export abstract class MotorBase implements MotorConversacion {
     this.colaFrases = [];
     this.reproduciendo = false;
     this.metricasActuales = null;
+    this.textoHablado = '';
+    this.turnoAvatarPendiente = false;
   }
 }
