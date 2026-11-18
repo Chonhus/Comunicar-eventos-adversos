@@ -304,3 +304,17 @@ todas las escrituras a Supabase fallen (quedan como `console.warn`); build, lint
   políticas RLS del docente (el patrón de recursión con `security definer` es
   estándar pero no se ha ejecutado ni una vez), y el flujo completo de acceso.
 - F6 (pulido): STT de producción, móvil/Safari, accesibilidad, errores de verdad.
+- **Cerrar el agujero de coste en las Edge Functions (decidido: después del
+  hackathon, no antes).** `conversar`, `detectar-items`, `evaluar-intento` y
+  `token-voz` tienen `verify_jwt = false` y no comprueban que quien llama sea un
+  alumno real: el cliente les manda la clave pública (`anon key`) en vez de la
+  sesión real, así que cualquiera que la extraiga del bundle puede llamarlas
+  directamente sin pasar por `/acceso` ni por el código de grupo. Ya se añadió un
+  tope de coste independiente en `_shared/limites.ts` (rechaza historiales/turnos
+  desproporcionados) como mitigación parcial, pero el cierre real requiere: que el
+  cliente mande el `access_token` de su propia sesión (no el anon key) a estas 4
+  funciones, que cada función verifique ese token y compruebe que existe una fila
+  en `alumnos` para ese usuario antes de llamar a Claude/Azure, y activar
+  `verify_jwt = true` en `supabase/config.toml` para esas 4 funciones. Probar con
+  cuidado el modo texto `?debug=1` después del cambio (puede dejar de funcionar si
+  se usa sin haber entrado antes por un código de grupo).
